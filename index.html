@@ -11,6 +11,9 @@
     />
 
     <style>
+      body::selection{
+        background-color: rgba(255, 247, 0, 0.316);
+      }
       code[class*="language-"],
       pre[class*="language-"] {
         color: #c9d1d9;
@@ -326,6 +329,9 @@
       html body code::before {
         letter-spacing: -0.2em;
         content: "\00a0";
+      }
+      html body pre > code::selection{
+        background-color: #ff00006e;
       }
       html body pre > code {
         padding: 0;
