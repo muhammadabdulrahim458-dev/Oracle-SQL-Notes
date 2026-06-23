@@ -1,0 +1,77 @@
+---
+title: Database Foundations
+description: Database Foundations
+---
+
+## The Big Picture Flow (Why We're Here)
+
+```mermaid
+flowchart LR
+    P[Business Problem] --> S[Need to Store Data]
+    S --> F[File System Attempt]
+    F --> Fail[Problems: Redundancy, Inconsistency, No Security, No Concurrency]
+    Fail --> DB[Database & DBMS]
+    DB --> D[Design & Normalization]
+    D --> Q[SQL Queries]
+    Q --> App[Application]
+```
+
+---
+
+## 1. What is Data?
+
+### 1. Big Picture
+Data is the raw material of every software system. Without data, there is no state, no history, no user information – a system cannot function.
+
+### 2. Simple Explanation
+Data is just **facts** – unprocessed numbers, text, images, or sounds. For example, "25", "John", "$1200" are all pieces of data. When we organise and give them meaning, they become **information**.
+
+### 3. Key Terms
+- **Data**: Raw, uninterpreted facts.
+- **Information**: Data that has been processed, organised, or structured to make it useful.
+- **Metadata**: Data about data – e.g., the column names, data types, and constraints in a table.
+
+### 4. Real World Example
+- **University**: Student roll numbers, course codes, grades – all data.
+- **E‑commerce**: Product IDs, prices, customer names.
+- **Banking**: Account numbers, transaction amounts, balances.
+- **Hospital**: Patient IDs, test results, drug prescriptions.
+
+### 5. Software Engineer Perspective
+We constantly deal with data in different forms – JSON, CSV, XML, or binary. Understanding the nature of data (structured, semi‑structured, unstructured) dictates how we store and process it. In real projects, we design schemas that define the data types and constraints early.
+
+### 6. Exam Perspective
+- **Definition** (often asked): "Data is raw facts that have no meaning by themselves."
+- **Difference** between data and information (common question).
+- **Examples** of data and information.
+
+### 7. Common Mistakes
+- Confusing data with information – they are **not** interchangeable.
+- Ignoring metadata – in exams, questions often ask about metadata too.
+
+### 8. Quick Revision Box
+- Data = raw facts (e.g., "25").
+- Information = processed data (e.g., "Age = 25").
+- Metadata = schema info, data types.
+- Data is the input; information is the output of processing.
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

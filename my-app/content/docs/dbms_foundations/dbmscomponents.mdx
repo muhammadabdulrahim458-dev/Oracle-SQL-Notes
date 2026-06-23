@@ -1,0 +1,91 @@
+---
+title: Types of Databases
+description: Components and Types of Databases
+---
+
+## Components of a Database Environment
+
+### 1. Big Picture
+A database environment is more than just the database and DBMS – it includes hardware, software, people, procedures, and data itself. Understanding these components helps us design, deploy, and maintain a complete database system.
+
+### 2. Simple Explanation
+Think of the environment as everything required to make the database work: the hardware (servers), the DBMS software, the data, the people (DBAs, developers, users), and the rules (backup schedules, access policies). All these parts interact to provide a functional system.
+
+### 3. Key Terms
+- **Hardware**: Servers, storage, network.
+- **Software**: DBMS, operating system, application software, tools.
+- **Data**: The actual stored information.
+- **People**: Database administrators (DBAs), developers, end‑users, system analysts.
+- **Procedures**: Backup, recovery, security policies, maintenance plans.
+
+### 4. Real World Example
+- **University**: Hardware (university servers), software (Oracle DBMS, student portal), data (student records), people (registrar, IT staff, professors), procedures (enrolment process, backup nightly).
+- **E‑commerce**: AWS cloud infrastructure (hardware), PostgreSQL (software), product data, engineering team (people), automated scaling procedures.
+
+### 5. Software Engineer Perspective
+We interact mainly with the software (DBMS) and data, but we must be aware of hardware limitations, network latency, and operational procedures. We work closely with DBAs to configure indexes, optimise queries, and plan for growth. In a DevOps culture, we often manage some of these components via infrastructure‑as‑code (e.g., Terraform).
+
+### 6. Exam Perspective
+- **List and explain** the components.
+- Understand the **role of each** – who does what.
+- Sometimes asked: "Draw the database environment architecture."
+
+### 7. Common Mistakes
+- Forgetting **people** – they are crucial.
+- Missing **procedures** – often overlooked but essential.
+- Thinking the environment is just the DBMS – it's a systemic view.
+
+### 8. Quick Revision Box
+- Components: Hardware, Software, Data, People, Procedures.
+- Each component is interdependent.
+- DBAs manage the overall system.
+- Procedures ensure reliability and security.
+
+---
+
+## Different Categories/Types of Databases
+
+### 1. Big Picture
+Databases are not one‑size‑fits‑all. Based on data structure, access patterns, and scalability needs, we choose different types. This classification helps us pick the right tool for the right problem.
+
+### 2. Simple Explanation
+We can group databases into several categories. The most common are **relational** (tables, SQL) and **NoSQL** (non‑relational, for flexible schemas and high scale). There are also specialised types like **graph databases**, **time‑series databases**, and **object‑oriented databases**.
+
+### 3. Key Terms
+- **Relational Database**: Data organised in tables with predefined schemas; uses SQL.
+- **NoSQL Database**: Non‑relational, supports various data models (document, key‑value, column‑family, graph).
+- **Document Database**: Stores data as documents (JSON, BSON) – e.g., MongoDB.
+- **Key‑Value Store**: Simple key‑value pairs – e.g., Redis.
+- **Column‑Family Store**: Optimised for large‑scale analytics – e.g., Cassandra.
+- **Graph Database**: Models relationships as nodes and edges – e.g., Neo4j.
+- **Time‑Series Database**: Optimised for time‑stamped data – e.g., InfluxDB.
+
+### 4. Real World Example
+- **Relational**: Banking systems (MySQL, PostgreSQL) – require strong consistency and ACID.
+- **Document**: E‑commerce product catalogs (MongoDB) – flexible schema for varying product attributes.
+- **Key‑Value**: Caching and session storage (Redis) – extremely fast lookups.
+- **Graph**: Social networks (Neo4j) – friend‑of‑friend queries.
+- **Column‑Family**: IoT data storage (Cassandra) – high write throughput.
+- **Time‑Series**: Monitoring systems (InfluxDB) – storing server metrics over time.
+
+### 5. Software Engineer Perspective
+We choose the database type based on use case. For transactional systems (OLTP), relational is often preferred. For high‑velocity, high‑volume data with flexible schema, NoSQL shines. In modern microservices, we often use **polyglot persistence** – different services use different databases best suited for their workload.
+
+### 6. Exam Perspective
+- **Classification**: Relational vs. NoSQL; sub‑types.
+- **Advantages/Disadvantages** of each.
+- **When to use which** – typical exam question.
+- **Example applications** for each type.
+
+### 7. Common Mistakes
+- Thinking NoSQL is always better – it isn't; it depends on consistency vs. scalability trade‑offs.
+- Confusing document DB with key‑value – they are different.
+- Assuming relational databases are obsolete – they are still dominant.
+
+### 8. Quick Revision Box
+- Relational: SQL, ACID, schema‑based.
+- NoSQL: flexible schema, high scalability, eventual consistency.
+- Document, Key‑Value, Column‑Family, Graph, Time‑Series.
+- Choose based on use case: consistency, scalability, query patterns.
+
+---

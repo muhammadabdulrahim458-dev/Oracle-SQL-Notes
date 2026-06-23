@@ -1,0 +1,39 @@
+---
+title: Database  Existance
+description: Why do Databases Exist?
+---
+
+### 1. Big Picture
+Before databases, applications stored data in files. This led to chaos – duplicate data, inconsistent updates, no access control, and crashes that corrupted everything. Databases were invented to solve these systemic problems.
+
+### 2. Simple Explanation
+We need databases because **files alone are not enough**. When multiple users access the same file, data gets overwritten. When the same data is copied in many places, updates become inconsistent. Databases provide a **centralised, controlled, and reliable** way to store and share data.
+
+### 3. Key Terms
+- **Data Independence**: The ability to change the database structure without affecting the application programs.
+- **Data Integrity**: Ensuring that data is accurate and consistent.
+- **Concurrency Control**: Allowing multiple users to access data simultaneously without conflicts.
+
+### 4. Real World Example
+- **Banking**: A file system cannot handle simultaneous withdrawals – it would lead to race conditions. A DBMS uses locks and transactions to ensure correct balances.
+- **E‑commerce**: Inventory must be up‑to‑date across all sales channels – a database ensures that one sale reduces stock globally.
+- **Healthcare**: Patient records must be secure and auditable – databases provide fine‑grained access control.
+
+### 5. Software Engineer Perspective
+We rely on databases to offload complex data management tasks. Instead of writing our own file‑based logic, we use a DBMS to handle **replication**, **sharding**, **failover**, and **backups** – which are critical for production systems. We design our applications to be database‑agnostic where possible, using ORMs or DAOs.
+
+### 6. Exam Perspective
+- Often asked: "Why are databases preferred over file systems?"
+- Highlight: **reduced redundancy**, **data consistency**, **security**, **concurrency**, **data integrity**, and **backup/recovery**.
+
+### 7. Common Mistakes
+- Overlooking the **concurrency** aspect – it's a major reason.
+- Thinking that databases are only for large systems – even small apps benefit from a DBMS.
+
+### 8. Quick Revision Box
+- Databases solve file system limitations.
+- Provide: data independence, integrity, security, concurrency control.
+- Enable centralised data management and sharing.
+- Reduce redundancy and inconsistency.
+
+---

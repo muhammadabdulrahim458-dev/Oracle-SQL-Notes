@@ -1,0 +1,12 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "dbms_foundations",
+    "relationalModel",
+    "EERD",
+    "sql",
+    "normalization",
+    "test"
+  ]
+}

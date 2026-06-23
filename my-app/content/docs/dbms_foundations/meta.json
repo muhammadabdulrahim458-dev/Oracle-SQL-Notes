@@ -1,0 +1,18 @@
+{
+  "title": "DBMS Foundations",
+  
+  "pages": [
+    "index",
+    "definition",
+    "dbmsexistense",
+    "filevsdbms",
+    "advantages",
+    "3SchemaArchitecture",
+    "dbmscomponents",
+    "dbmslanguage",
+    "datadependency",
+    "erp",
+    "datawarehouse",
+    "databaselifecycle"
+  ]
+}

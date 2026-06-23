@@ -1,0 +1,81 @@
+---
+title: Definition
+description: What is a Database?
+---
+
+### 1. Big Picture
+A database is the **container** where we store data in an organised way so that it can be easily accessed, managed, and updated. Without a database, we would have data scattered in files and folders with no structure.
+
+### 2. Simple Explanation
+Think of a database as a **digital filing cabinet**. Instead of having a pile of paper, you have drawers, folders, and labels. A database stores data in tables, with rows (records) and columns (fields), making it easy to find, add, or remove information.
+
+### 3. Key Terms
+- **Database**: A collection of related data stored in a structured format.
+- **Table**: A set of rows and columns (also called relation).
+- **Row/Record**: A single entry in a table (e.g., one student).
+- **Column/Field**: A specific attribute (e.g., name, age).
+
+### 4. Real World Example
+- **University**: Database containing students, courses, departments, and enrolment.
+- **E‑commerce**: Database with products, orders, customers, and payments.
+- **Banking**: Database with accounts, transactions, and customers.
+- **Hospital**: Database with patients, doctors, appointments, and tests.
+
+### 5. Software Engineer Perspective
+We design databases using **schemas** – a blueprint of tables and relationships. In industry, we often use **relational databases** (PostgreSQL, MySQL) or **NoSQL** (MongoDB, Redis) depending on the use case. The database is the core of most applications; performance and reliability depend on proper design.
+
+### 6. Exam Perspective
+- **Definition**: "A database is an organised collection of structured data."
+- **Key features**: persistence, integrity, consistency.
+- Often asked: "What is a database?" or "Why do we need a database?"
+
+### 7. Common Mistakes
+- Thinking a database is just a file – it is a **managed** collection with a specific structure.
+- Confusing a database with a DBMS – they are different (see next topic).
+
+### 8. Quick Revision Box
+- Database = organised data.
+- Structured in tables (relations).
+- Supports CRUD operations (Create, Read, Update, Delete).
+- Separate from DBMS (the software that manages it).
+
+---
+
+## 3. What is a DBMS?
+
+### 1. Big Picture
+A DBMS (Database Management System) is the **software** that sits between the database and the users/applications. It handles all the complex tasks – storing, retrieving, securing, and managing the data – so we don't have to code them from scratch.
+
+### 2. Simple Explanation
+If a database is the filing cabinet, the DBMS is the **librarian**. It knows where everything is, enforces rules, allows multiple people to access files at the same time, and ensures that no one messes up the data. Popular DBMS: MySQL, PostgreSQL, Oracle, SQL Server, MongoDB.
+
+### 3. Key Terms
+- **DBMS**: Software that manages databases – provides an interface for interaction and enforces rules.
+- **Query**: A request for data (e.g., `SELECT * FROM students`).
+- **Transaction**: A unit of work (e.g., transferring money) – must be atomic, consistent, isolated, durable (ACID).
+
+### 4. Real World Example
+- **University**: The university uses a DBMS (e.g., Oracle) to manage student records – many staff and students query the system concurrently.
+- **E‑commerce**: Amazon uses a distributed DBMS (e.g., DynamoDB) to handle millions of orders per day.
+- **Banking**: Banks use transactional DBMS (e.g., IBM Db2) to ensure that account balances are always accurate.
+- **Hospital**: Hospitals use a DBMS (e.g., SQL Server) to store patient data securely.
+
+### 5. Software Engineer Perspective
+We rarely build a DBMS; we **use** it. Our job is to choose the right DBMS for the project, design the schema, write efficient queries, and optimise performance. We also handle **connection pooling**, **indexing**, and **backup strategies**. Understanding the internals (e.g., query execution, transaction isolation) helps us write better applications.
+
+### 6. Exam Perspective
+- **Definition**: "DBMS is a software system that enables users to define, create, maintain, and control access to the database."
+- **Functions**: data definition, data manipulation, data security, concurrency control, backup, and recovery.
+- **Differences** between database and DBMS (common).
+
+### 7. Common Mistakes
+- Saying "database" when you mean "DBMS" – be precise.
+- Forgetting that DBMS is software, not the data itself.
+
+### 8. Quick Revision Box
+- DBMS = software; database = data.
+- Provides CRUD, security, concurrency, and recovery.
+- Examples: MySQL, PostgreSQL, Oracle, MongoDB.
+- Helps enforce ACID properties.
+
+---
