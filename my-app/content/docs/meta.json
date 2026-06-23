@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "dbms_foundations",
+    "databasedesign_erd",
     "relationalModel",
     "EERD",
     "sql",

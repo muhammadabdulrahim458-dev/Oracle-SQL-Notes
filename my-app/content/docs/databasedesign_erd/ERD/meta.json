@@ -1,0 +1,17 @@
+{
+  "title": "Entity Relationship Modeling (ERD)",
+  "pages": [
+    "index",
+    "---Core Components---",
+    "attributes",
+    "relationsship",
+    "classification",
+    "---Notation & Design---",
+    "erdnotations",
+    "advancedrelationships",
+    "howtodrawerd",
+    "---Practice & Rules---",
+    "specifications",
+    "casestudies"
+  ]
+}
