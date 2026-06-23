@@ -1,4 +1,138 @@
 ---
 title: Introduction
-description: Database Foundations
+description: Introduction to Database Management Systems (DBMS)
 ---
+
+## Why Do We Need Databases?
+
+Almost every modern application stores and manages data.
+
+Whether it is:
+
+* Banking applications
+* Social media platforms
+* E-commerce websites
+* Hospital systems
+* University management systems
+
+all of them depend on databases.
+
+As businesses grew, storing information inside simple files became difficult because data started becoming:
+
+* Large
+* Complex
+* Shared by multiple users
+
+This created several problems.
+
+## The Journey: Problem → Solution
+
+![diagram](/intro.png)
+
+---
+
+## What is a Database?
+
+<Callout type="info" title="Definition">
+A **database** is an organized collection of related data that is stored electronically and can be easily accessed, managed, and updated.
+</Callout>
+
+### Example
+
+Instead of storing student records in separate files:
+
+| Student ID | Name  | Department           | CGPA |
+| ---------- | ----- | -------------------- | ---- |
+| 101        | Ali   | Software Engineering | 3.7  |
+| 102        | Ahmed | Computer Science     | 3.5  |
+
+we store everything inside a centralized database.
+
+---
+
+## What is a DBMS?
+
+<Callout type="info" title="Definition">
+A **Database Management System (DBMS)** is software that allows users and applications to create, store, manage, retrieve, update, and secure data efficiently.
+</Callout>
+
+Think of it as an intelligent manager between users and the database.
+
+```text
+Users/Applications
+         │
+         ▼
+       DBMS
+         │
+         ▼
+     Database
+
+```
+
+---
+
+## Real-World Analogy
+
+Imagine a university library.
+
+* Books = Data
+* Library building = Database
+* Librarian = DBMS
+* Students = Users
+
+Students do not directly manage books.
+
+They request the librarian, and the librarian organizes everything efficiently.
+
+DBMS works the same way.
+
+---
+
+## Problems with Traditional File Systems
+
+Before databases, organizations used files to store data.
+
+This caused many issues.
+
+| Problem | Meaning |
+| --- | --- |
+| Data Redundancy | Duplicate data stored multiple times |
+| Data Inconsistency | Different files contain conflicting information |
+| Poor Security | Difficult to control access |
+| No Concurrency Control | Multiple users can create conflicts |
+| Difficult Maintenance | Updating data is time-consuming |
+
+---
+
+## Goals of a DBMS
+
+A good DBMS aims to:
+
+* Organize data efficiently
+* Reduce duplication
+* Improve data consistency
+* Secure sensitive information
+* Support multiple users simultaneously
+* Enable fast data retrieval
+* Simplify application development
+
+---
+
+## Popular DBMS Examples
+
+| DBMS | Type | Common Usage |
+| --- | --- | --- |
+| MySQL | Relational | Web applications |
+| PostgreSQL | Relational | Enterprise systems |
+| Oracle Database | Relational | Large organizations |
+| Microsoft SQL Server | Relational | Business applications |
+| MongoDB | NoSQL | Modern scalable applications |
+
+---
+
+
+
+
+<Callout type="success" title="Key Takeaway">
+A database stores data. A DBMS manages that data. Together, they form the foundation of almost every modern software system.
+</Callout>
