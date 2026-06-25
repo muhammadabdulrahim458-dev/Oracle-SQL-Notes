@@ -1,279 +1,304 @@
 ---
 title: Relational Model
-description: The Relational Model
+description: Logical Database Design and the Relational Model
 ---
 
-## The Big Picture Flow (The Bridge)
 
+
+
+
+
+## 1. Chapter Overview & Objectives
+
+### What is the Problem?
+In Chapters 2 and 3, you created a **Conceptual Data Model (EER Diagram)**. This diagram uses business-oriented language (entities, relationships, attributes) to represent how the business operates. However, EER diagrams are *abstract* and *technology independent*. You cannot run an EER diagram on a computer. 
+
+**Logical Database Design** solves this by transforming the EER diagram into a **Logical Data Model** (specifically the **Relational Model**), which is a *technical blueprint* compatible with modern Database Management Systems (like MySQL, Oracle, or PostgreSQL).
+
+### Why is this Chapter Important?
+- **Bridging the Gap:** It is the precise engineering step between "understanding the business" and "building the actual database."
+- **Eliminating Bad Data:** It introduces **Normalization**, a scientific process for removing errors (anomalies) that allow duplicate or conflicting data to enter your system.
+- **The "Blueprints" for SQL:** The output of this chapter is a set of **Relational Schemas** (tables with Primary and Foreign Keys) which you will directly translate into SQL `CREATE TABLE` commands in Chapter 6.
+
+### How Does it Connect to the SDLC?
+- **Analysis Phase:** Produced the EER diagram (The "What").
+- **Design Phase (Logical):** Produces the Relational Schema (The "How" in database terms).
+- **Design Phase (Physical):** Optimizes the schema for performance and storage.
+- **Implementation:** Creates the actual tables using SQL.
+
+---
+
+## 2. The Relational Data Model: Core Terminology
+
+Before we can design, we must understand the vocabulary. A **Relational Data Model** represents data as a collection of **Relations** (tables).
+
+| Term | Simple Definition | Exam Definition | Example |
+| :--- | :--- | :--- | :--- |
+| **Relation** | A table of data. | A named, two-dimensional table containing data. | The `EMPLOYEE` table. |
+| **Attribute** | A column in a table. | A named column of a relation describing a characteristic. | `EmployeeName` |
+| **Row / Tuple** | A single record. | A single occurrence of data within a relation. | `(101, "John Doe", "IT")` |
+| **Primary Key (PK)** | The unique ID for a row. | An attribute (or combination of attributes) that uniquely identifies each row in a relation. Cannot be null. | `EmployeeID` |
+| **Composite Key** | A PK made of 2+ attributes. | A primary key that consists of more than one attribute. | `(FlightNumber, Date, Time)` |
+| **Foreign Key (FK)** | The link to another table. | An attribute in a relation that serves as the Primary Key of *another* relation. Used to establish relationships between tables. | `DepartmentID` in the `Employee` table (links to the `Department` table). |
+| **Candidate Key** | "Almost" a primary key. | An attribute (or combination) that *could* serve as the PK because it uniquely identifies rows. | Both `StudentID` and `Email` address could uniquely identify a student. |
+| **Surrogate Key** | A system-assigned ID. | A non-intelligent, automatically generated serial number used as the primary key for a relation. | `Auto-increment` ID columns in databases. |
+| **Domain** | The "legal" values for a column. | The set of allowable values for a given attribute. For example, the domain of "Gender" is `{'M', 'F'}`. | `CustomerState` domain could be `{'CA', 'NY', 'TX'...}`. |
+
+### Fundamental Properties of a Relation (Must Know)
+For a table to truly be a "Relation", it must follow these 6 rules:
+1.  **Unique Name:** Every table name must be unique in the database.
+2.  **Atomic Values:** Every cell must contain exactly one value (no repeating groups, no lists).
+3.  **Unique Rows:** No two rows can be identical.
+4.  **Unique Column Names:** Attributes must have unique names within the table.
+5.  **Order of Columns is Irrelevant:** You can move columns around; the data means the same.
+6.  **Order of Rows is Irrelevant:** You can sort rows differently; the data remains the same.
+
+---
+
+## 3. Integrity Constraints (The "Laws" of Relations)
+
+To prevent "garbage-in, garbage-out," the relational model enforces strict rules.
+
+1.  **Domain Constraints:** The value entered must be from the correct data type and specified range.
+    - *Example:* You cannot enter "Text" into a `DATE` column, and you cannot set a `Quantity` to `-5` if the domain is `Positive Integer`.
+2.  **Entity Integrity Rule:** **No Primary Key attribute may be null** (empty). 
+    - *Why?* If the PK is null, you cannot uniquely identify that row.
+3.  **Referential Integrity Constraint:** **Any Foreign Key value must match an existing Primary Key value in the parent table, OR be null.**
+    - *Why?* If you have an order for `CustomerID 5`, `CustomerID 5` *must* exist in the `Customer` table. You cannot have an "orphan" order belonging to a customer that doesn't exist.
+
+**Visualizing Referential Integrity (Crow's Foot):**
 ```mermaid
-flowchart LR
-    subgraph Design[Design Phase]
-        Req[Business Req] --> ER[Conceptual: ER/EERD]
-    end
-    subgraph Logical[Logical Phase - Part 4]
-        ER --> Map[Mapping Rules]
-        Map --> RM[Relational Model<br>Tables, Keys, Constraints]
-    end
-    RM --> Next[Next: Normalization & SQL]
+erDiagram
+    CUSTOMER ||--o{ ORDER : "Places"
+    CUSTOMER {
+        int CustomerID PK
+    }
+    ORDER {
+        int OrderID PK
+        int CustomerID FK "Must match an existing CustomerID"
+    }
 ```
 
-**Bridge**: The ERD is a blueprint. The **Relational Model** is the actual *language* and *structure* we use to build the database. It takes the "what" (entities/relationships) and defines the "how" (tables, columns, keys, and strict mathematical rules). This is where we map our beautiful diagrams to actual `CREATE TABLE` statements.
+---
+
+## 4. Transforming EER Diagrams into Relations (The MAPPING Guide)
+
+This is the most important section of the chapter for exams. You will be given an EER diagram and asked to produce the relational schema. Here is the **Master Mapping Strategy**.
+
+### Step 1: Mapping Regular (Strong) Entities
+**Method:** Create one relation for the entity. Use the entity's identifier as the PK. Add all simple attributes.
+- **Composite Attributes:** Ignore the composite name. Only bring the *atomic component parts*.
+- **Multivalued Attributes:** *Create a new separate relation!* The PK of the new relation is `(Owner PK + Multivalued Attribute)`.
+
+**Example:** `EMPLOYEE` has `EmpID`, `EmpName`, and `{Skill}` (multivalued).
+- **Rule:** Create two tables: `EMPLOYEE(EmpID, EmpName)` and `EMPLOYEE_SKILL(EmpID, Skill)`.
+
+### Step 2: Mapping Weak Entities
+**Method:** Create one relation for the weak entity. Include the **Owner's Primary Key** as a Foreign Key. The composite PK of the weak entity is `(Owner PK + Weak Entity's Partial Identifier)`.
+
+**Example:** `DEPENDENT` depends on `EMPLOYEE`. `DEPENDENT` has `DependentName` (partial ID) and `DOB`.
+- **Rule:** `DEPENDENT(EmployeeID, DependentName, DOB)` with PK = `(EmployeeID, DependentName)`. 
+- *Professional Tip:* It is highly recommended to assign a **Surrogate Primary Key** (`DependentID`) here instead, because the composite key is bulky and hard to manage.
+
+### Step 3: Mapping Binary Relationships
+**Case A: One-to-Many (1:M)**
+**Method:** Migrate the Primary Key of the "One" side as a **Foreign Key** into the relation for the "Many" side.
+
+**Case B: Many-to-Many (M:N)**
+**Method:** Create a *new associative relation* (a bridge table). The new composite PK is `(PK1 + PK2)`. Both attributes become Foreign Keys. Add any relationship attributes to this new table.
+
+**Case C: One-to-One (1:1)**
+**Method:** Identify the optional and mandatory side. Place the PK of the **Mandatory** entity as an FK into the **Optional** entity.
+
+**Visual for 1:M Mapping (CUSTOMER -> ORDER):**
+```mermaid
+erDiagram
+    CUSTOMER ||--o{ ORDER : "Places"
+
+    CUSTOMER {
+        int CustomerID PK
+        string Name
+    }
+    ORDER {
+        int OrderID PK
+        date OrderDate
+        int CustomerID FK "Migrated from One side"
+    }
+```
+
+**Visual for M:N Mapping (STUDENT -> COURSE):**
+```mermaid
+erDiagram
+    STUDENT }|--|{ COURSE : "Registers For"
+
+    STUDENT {
+        int StudentID PK
+    }
+    COURSE {
+        int CourseID PK
+    }
+    REGISTRATION {
+        int StudentID PK,FK
+        int CourseID PK,FK
+        date DateCompleted
+    }
+```
+
+### Step 4: Mapping Associative Entities
+**Method:** If your EER diagram already has a rounded rectangle (Associative Entity), map it as you would an M:N relationship. If it has its own *single attribute identifier* (like `CertificateNumber`), you can choose that as the PK instead of the composite key.
+
+### Step 5: Mapping Unary (Recursive) Relationships
+**Case A: 1:M Unary (Employee Supervises Employee)**
+**Method:** Add a Foreign Key to the same table that references the Primary Key.
+
+**Case B: M:N Unary (Part Contains Part)**
+**Method:** Create a new associative table containing two FKs, both referencing the same original table. Add any relationship attributes to this new table.
+
+### Step 6: Mapping Ternary (N-ary) Relationships
+**Method:** Create a new associative table containing **three** Foreign Keys from the three participating entities. The composite Primary Key is `(PK1 + PK2 + PK3)`.
+
+### Step 7: Mapping Supertype/Subtype Relationships
+**Method:** 
+1.  Create a single relation for the **Supertype**. Include its PK and all common attributes. Add the **Subtype Discriminator** attribute.
+2.  Create a relation for **each Subtype**.
+3.  The **Primary Key of each subtype relation is exactly the same as the Supertype's PK** (it acts as both PK and FK).
+
+**Example:** `EMPLOYEE` Supertype, `HOURLY` and `SALARIED` Subtypes.
+```mermaid
+erDiagram
+    EMPLOYEE ||--o{ HOURLY_EMPLOYEE : "Is A"
+    EMPLOYEE ||--o{ SALARIED_EMPLOYEE : "Is A"
+    
+    EMPLOYEE {
+        int EmpID PK
+        string EmpName
+        string EmpType "Discriminator"
+    }
+    HOURLY_EMPLOYEE {
+        int EmpID PK,FK
+        decimal HourlyRate
+    }
+    SALARIED_EMPLOYEE {
+        int EmpID PK,FK
+        decimal AnnualSalary
+    }
+```
 
 ---
 
-## 1. What is the Relational Model?
+## 5. Normalization: Designing Well-Structured Relations
 
-### 1. Big Picture
-Proposed by E.F. Codd in 1970, the Relational Model is a **mathematical framework** for organizing data into tables. It ensures data integrity and provides a standardized way to query data (SQL). It is the foundation of almost every modern transactional database.
+**What is the problem?** You have mapped an EER diagram to tables. But these tables might still be "bad." They contain **Anomalies** (errors caused by redundancy when inserting, updating, or deleting data). 
 
-### 2. Simple Explanation
-Think of the Relational Model as a **strict spreadsheet** on steroids.
-- The whole database is a collection of **Tables** (called *Relations*).
-- Each table has **Rows** (called *Tuples*) and **Columns** (called *Attributes*).
-- The magic is that tables can be linked together using **Keys**, allowing us to combine data without duplication.
+**The Solution:** **Normalization** is the step-by-step process of eliminating these anomalies and breaking large, messy tables into smaller, clean, well-structured tables.
 
-### 3. Core Terminology
+### Step 0: Functional Dependencies (The Foundation)
+Before normalizing, you must map the logic of the data.
+- **Functional Dependency:** If you know the value of Attribute A, you can *uniquely* determine the value of Attribute B. (Written as `A → B`).
+- **Determinant:** The attribute on the left side of the arrow (`A`).
+- **Candidate Key:** A determinant that uniquely identifies *all* remaining non-key attributes in a relation.
 
-| Formal Term | Everyday Term | Description |
+### The Normalization Process (Step-by-Step)
+
+**Step 1: First Normal Form (1NF)**
+- **Rule:** The table must have a Primary Key, and **every cell must contain only one value** (No repeating groups).
+- **Action:** Remove any multivalued attributes by filling in blank rows with the related data, and assign a composite primary key.
+
+**Step 2: Second Normal Form (2NF)**
+- **Rule:** The table is in 1NF, and **there are no Partial Dependencies**.
+- **Action:** A Partial Dependency happens when a non-key attribute is functionally dependent on *only part* of a composite Primary Key. 
+- *Fix:* Move that partial key and its dependent non-key attribute to a new table.
+
+**Step 3: Third Normal Form (3NF)**
+- **Rule:** The table is in 2NF, and **there are no Transitive Dependencies**.
+- **Action:** A Transitive Dependency happens when a non-key attribute depends on the Primary Key *via another non-key attribute* (e.g., `PK → AttributeA → AttributeB`).
+- *Fix:* Move the middle attribute (`AttributeA`) and its dependent (`AttributeB`) to a new table.
+
+**Step 4: Beyond 3NF (Note for exams)**
+- **Boyce-Codd Normal Form (BCNF):** Every determinant in the relation must be a Candidate Key. If you have multiple overlapping Candidate Keys, even a 3NF table can have anomalies. You must decompose to BCNF.
+- **4NF, 5NF:** Normalizing to remove multivalued and join dependencies. (Appendix B covers these).
+
+---
+
+## 6. Merging Relations (View Integration)
+
+In large projects, different teams might work on different parts of the database and come up with their own normalized relations. You must **merge** these relations into a single, consistent database. When you merge, watch out for these 4 pitfalls:
+
+| Pitfall | Definition | How to Fix it |
 | :--- | :--- | :--- |
-| **Relation** | Table | A 2D structure with rows and columns. |
-| **Tuple** | Row / Record | A single entry in the table. |
-| **Attribute** | Column / Field | A specific property of the entity. |
-| **Domain** | Data Type | The set of allowed values for an attribute (e.g., `INT`, `VARCHAR(50)`). |
-| **Degree** | - | The number of columns in a table. |
-| **Cardinality** | - | The number of rows in a table. |
-| **Schema** | Table Definition | The structure (name, columns, types, constraints). |
-| **Instance** | Table Data | The actual data in the table at a specific moment. |
-
-### 4. Properties of a Relation (The Golden Rules)
-
-1.  **Atomic Values**: Every cell must contain a single value (cannot be a list or nested table). This is the rule of **1NF**.
-2.  **No Duplicate Rows**: Each row must be unique (enforced by a Primary Key).
-3.  **Unordered Rows & Columns**: The order of rows/columns does not matter.
-4.  **Single Value per Cell**: Intersection of a row and column holds exactly one value.
+| **Synonyms** | Two or more attributes have *different names* but the *same meaning*. (e.g., `StudentID` in one table, `StudentNo` in another). | Standardize on one name (e.g., `StudentID`) or pick a third name. Create an `Alias` if needed. |
+| **Homonyms** | One attribute name has *multiple meanings* in different contexts. (e.g., `Address` is a "Home Address" in one table, and a "Campus Address" in another). | Rename both attributes to be distinct and specific (e.g., `HomeAddress`, `CampusAddress`). |
+| **Transitive Dependencies** | When merging two 3NF relations, a new transitive dependency is introduced between the combined PK and a non-key attribute. | Decompose the merged relation again into 3NF relations. |
+| **Hidden Supertypes/Subtypes** | You merge two relations with identical PKs, but one represents a supertype and the other represents a subtype. | Split the merged relation back into `SUPERTYPE` and `SUBTYPE` tables. |
 
 ---
 
-## 2. Keys – The Glue of the Relational Model
+## 7. Enterprise Keys vs. Surrogate Keys
 
-### 1. Big Picture
-Keys are the **identifiers** that allow us to uniquely find data and link tables together. Without keys, we cannot relate a `Customer` to their `Orders`.
+**Problem:** If you use a natural business key (like `EmpID`), you might find out later that an employee can also be a customer, and you want to merge the `EMPLOYEE` and `CUSTOMER` tables into a `PERSON` table. The `EmpID` and `CustID` values will likely clash.
 
-### 2. Simple Explanation
-Keys are like ID cards and family ties:
-- **Super Key**: Any set of attributes that can uniquely identify a row. (e.g., `{ID}`, `{ID, Name}`, `{Email}`).
-- **Candidate Key**: A *minimal* Super Key. No extra columns allowed. (e.g., `{ID}` or `{Email}`).
-- **Primary Key (PK)**: The one Candidate Key we choose to use. (e.g., `customer_id`).
-- **Alternate Key**: The Candidate Keys we didn't choose. (e.g., `Email` if `ID` is PK).
-- **Foreign Key (FK)**: A column (or set of columns) that points to the Primary Key of another table. (e.g., `customer_id` in the `Orders` table).
-- **Composite Key**: A Primary Key made of two or more columns. (e.g., `{order_id, product_id}` in an order items table).
-
-### 3. Key Hierarchy
-
-```mermaid
-flowchart TD
-    SK[Super Key<br>Any unique identifier] --> CK[Candidate Key<br>Minimal Super Key]
-    CK --> PK[Primary Key<br>The chosen one]
-    CK --> AK[Alternate Key<br>The runners-up]
-    PK --> FK[Foreign Key<br>References PK of another table]
-    style PK fill:#4CAF50,color:#fff
-    style FK fill:#2196F3,color:#fff
-```
-
-### 4. Real World Example
-- **University**: `Student` table. `student_id` is PK (Candidate). `email` is an Alternate Key (unique). `Enrollment` table uses `student_id` and `course_id` as a Composite PK, and each is a Foreign Key referencing the respective tables.
-- **E-commerce**: `Orders` table has `order_id` (PK) and `customer_id` (FK referencing `Customers`).
-
-### 5. Software Engineer Perspective
-We define keys using **DDL** (Data Definition Language) constraints:
-- `PRIMARY KEY (id)`
-- `FOREIGN KEY (customer_id) REFERENCES Customers(id)`
-- `UNIQUE (email)` (for Alternate Keys)
-
-Choosing a PK is critical. We often prefer **Surrogate Keys** (auto-increment integers or UUIDs) over **Natural Keys** (like email or SSN) because natural keys can change over time.
-
-### 6. Exam Perspective
-- **Define** all key types.
-- **Differentiate** Super vs Candidate vs Primary.
-- **Explain** why Composite Keys are necessary.
-- **What is a Foreign Key constraint?** (Referential Integrity).
-
-### 7. Quick Revision Box
-- **Super** = unique (may have extra cols).
-- **Candidate** = minimal unique.
-- **Primary** = chosen candidate.
-- **Foreign** = reference to another table's PK.
-- **Composite** = PK with multiple columns.
+**The Solution: Enterprise Keys.**
+1.  Instead of using a business key as the PK, give *every* relation a system-assigned **Surrogate Enterprise Key** (e.g., `ObjectID`). 
+2.  This `ObjectID` is *globally unique* across the whole database. 
+3.  Store the business keys (`EmpID`, `CustID`) as *non-key attributes* for lookup purposes.
+4.  **Result:** You can now seamlessly evolve your database to add a `PERSON` supertype, because the `ObjectID` allows you to perfectly link the `EMPLOYEE` and `CUSTOMER` records without breaking any Foreign Key relationships.
 
 ---
 
-## 3. Integrity Constraints – Guarding the Data
+## 8. Exam Preparation & Problem-Solving Frameworks
 
-### 1. Big Picture
-Constraints are **business rules** enforced by the DBMS. They prevent application bugs from corrupting your data.
+### Quick Question Recognition Guide
+- **"Map this ERD to Relational Schema"** -> Apply the **7-Step Mapping Rules** table from section 4.
+- **"Normalize this relation to 3NF"** -> Draw the functional dependencies. Apply 1NF, 2NF, 3NF rules.
+- **"Merge these relations"** -> Identify Synonyms, Homonyms, and Transitive dependencies.
 
-### 2. Simple Explanation
-Three main rules protect your database:
-1.  **Domain Integrity**: Ensures data is of the correct type/format (e.g., Age cannot be negative).
-2.  **Entity Integrity**: Ensures every row has a unique, non-null Primary Key.
-3.  **Referential Integrity (RI)**: Ensures that a Foreign Key always points to an existing row in the parent table. (e.g., You cannot add an `Order` for a `Customer` that doesn't exist).
+### Step-by-Step: Solving a Normalization Problem (The Pine Valley Invoice Example)
 
-### 3. Real World Example
-- **Referential Integrity**: If you try to delete a `Department` that still has `Employees`, the DBMS will either:
-    - **RESTRICT**: Throw an error and cancel the delete.
-    - **CASCADE**: Delete the employees too.
-    - **SET NULL**: Set the employee's `department_id` to NULL.
-- **Domain**: `salary` column only accepts positive numbers.
+**Scenario:** You are given a user view of a customer invoice (Order ID, Customer info, Product info, Quantity).
+**Goal:** Normalize to 3NF.
 
-### 4. Software Engineer Perspective
-We **never** bypass these constraints. They are our last line of defense. In our application code, we handle the exceptions thrown by the DBMS (e.g., `SQLIntegrityConstraintViolationException`) gracefully and show user-friendly error messages.
+1.  **Step 0 (Initial Table):** Lay it out as one flat table. `INVOICE(OrderID, CustomerID, CustomerName, Address, ProductID, Description, Price, Quantity)`.
+    - *Observation:* Repeating groups exist. One order can have multiple products (rows).
+2.  **Step 1 (Apply 1NF):** Fill empty cells. The Primary Key must be `(OrderID, ProductID)`.
+    - *Result:* `INVOICE(OrderID, ProductID, CustomerID, CustomerName, Address, Description, Price, Quantity)`.
+3.  **Step 2 (Apply 2NF):** Check partial dependencies. Does the whole key determine the attribute?
+    - `OrderID → CustomerID, CustomerName, Address`. (Yes, partial dependency exists).
+    - `ProductID → Description, Price`. (Yes, partial dependency exists).
+    - *Fix:* Extract these into `ORDER(OrderID, CustomerID, CustomerName, Address)` and `PRODUCT(ProductID, Description, Price)`. The original table becomes `ORDER_LINE(OrderID, ProductID, Quantity)`.
+4.  **Step 3 (Apply 3NF):** Check transitive dependencies on the remaining tables.
+    - In `ORDER`, check: `OrderID → CustomerID → CustomerName`. (Yes, `CustomerName` depends on `CustomerID`, not directly on `OrderID`). This is a transitive dependency.
+    - *Fix:* Extract `CustomerID` and its attributes to a `CUSTOMER(CustomerID, CustomerName, Address)` table. `ORDER` becomes `ORDER(OrderID, OrderDate, CustomerID)`.
+5.  **Final Result (3NF Relations):** `ORDER`, `PRODUCT`, `ORDER_LINE`, `CUSTOMER`.
 
-### 5. Exam Perspective
-- **Explain** Entity, Referential, and Domain Integrity.
-- **What happens** if we violate a Foreign Key constraint? (The operation is rejected).
-- **Define** the `ON DELETE CASCADE` / `ON DELETE SET NULL` clauses.
-
-### 6. Quick Revision Box
-- **Entity**: PK must be unique and not null.
-- **Referential**: FK must exist in parent table.
-- **Domain**: Data must match column type/range.
-- DBMS enforces these automatically.
-
----
-
-## 4. Mapping ER/EER to Relational Tables (The Rulebook)
-
-### 1. Big Picture
-This is the **practical conversion** process. We take our conceptual ERD/EERD and generate a physical set of tables. We have standardized rules for every ER construct.
-
-### 2. Simple Explanation
-Follow these steps to turn a diagram into tables:
-
-| ER Construct | Relational Mapping Rule |
-| :--- | :--- |
-| **Strong Entity** | Create a table with all simple attributes. PK is the entity's key attribute. |
-| **Composite Attribute** | Break it down into its constituent parts (e.g., `Address` → `Street`, `City`, `Zip`). |
-| **Multi-valued Attribute** | Create a **separate table** for it. The table's PK is the entity's PK + the attribute value. (e.g., `Employee_Phone(emp_id, phone_number)`). |
-| **Derived Attribute** | **Do not store** it. Create a view or compute in application. (e.g., `Age` from `DOB`). |
-| **1:1 Relationship** | Place the PK of one side as a FK in the other table. Usually, place it on the side with **total participation**. |
-| **1:M Relationship** | Place the PK of the "One" side as a FK in the "Many" side table. (e.g., `Department` PK goes into `Employee` as FK). |
-| **M:N Relationship** | Create a **new Junction Table**. Include the PKs of both entities as composite PK + FKs. (e.g., `Enrollment(student_id, course_id, grade)`). |
-| **Specialization (Inheritance)** | Use one of the 4 strategies (Single Table, Joined Table, etc.) - covered in Part 3. |
-| **Aggregation** | Treat the aggregated relationship as an entity. Its PK is the composite of the related entities. Link it using FKs. |
-
-### 3. Mapping Flow Diagram
-
-```mermaid
-flowchart TD
-    A[Start with ERD] --> B{Entity Type?}
-    B -->|Strong| C[Create Table with PK]
-    B -->|Weak| D[Create Table with FK to Owner + Partial Key as PK]
-    
-    C --> E{Attribute Type?}
-    E -->|Composite| F[Split into separate columns]
-    E -->|Multi-valued| G[Create separate table with composite PK]
-    E -->|Derived| H[Ignore / Compute later]
-    
-    A --> I{Relationship Type?}
-    I -->|1:M| J[Add PK of '1' side as FK in 'M' side]
-    I -->|M:N| K[Create Junction Table with composite PK]
-    I -->|1:1| L[Add PK of one side as FK in the other]
-```
-
-### 4. Software Engineer Perspective
-We use ORM generators (like JPA `hbm2ddl`) to automatically map our Java/Python classes to relational tables based on these rules. However, we **always** review the generated schema to ensure it matches the performance needs (adding indexes, adjusting types). This mapping is the basis for our **database migrations**.
-
-### 5. Exam Perspective
-- **"Map the following ERD to relational tables."** (A guaranteed 10-mark question).
-- **Write the SQL `CREATE TABLE` statements** for the mapped schema.
-- **Explain** why a junction table is needed for M:N.
-
-### 6. Common Mistakes
-- Forgetting that **multi-valued attributes** need a separate table.
-- Putting the FK on the wrong side in a 1:M relationship (must go on the "Many" side).
-- Trying to store derived attributes.
-- Forgetting to include the FK from the owner when mapping a **Weak Entity**.
-
-### 7. Quick Revision Box
-- Strong → Table.
-- 1:M → FK on Many side.
-- M:N → New Junction Table.
-- Multi-valued → New Table.
-- Derived → Don't store.
+### Common Mistakes to Avoid
+1.  **Forgetting to create a relationship table for M:N:** M:N mapping *always* requires a new table to hold the two FKs.
+2.  **Not resolving transitive dependencies in 3NF:** If you see `A → B → C`, you must split it into `(A, B)` and `(B, C)`. Leaving it in the same table fails 3NF.
+3.  **Using business keys as Primary Keys:** Natural keys (like `VIN` or `SSN`) change over time. A Surrogate/Enterprise key is always superior for logical design.
+4.  **Misinterpreting Composite vs. Multivalued:** A composite attribute (like `Address` = `Street, City`) is broken into columns *in the same table*; a multivalued attribute (like `Skills`) is extracted to a *new separate table*.
 
 ---
 
-## 5. Introduction to Relational Algebra (Theoretical Foundation)
+## Quick Revision Cheat Sheet (One Page Summary)
 
-### 1. Big Picture
-SQL is the *practical* language we use. **Relational Algebra** is the *mathematical* theory behind SQL. It defines a set of operations that take tables as input and produce tables as output.
+**EER to Relational Mapping Shortcuts:**
+1.  **Entity:** `Table(PK, attrs...)`
+2.  **Composite:** Break into columns (no new table).
+3.  **Multivalued:** `NewTable(PK_Owner, Attr)` -> PK = `(PK_Owner + Attr)`.
+4.  **Weak:** `Table(PK_Owner, Partial_ID, attrs)`.
+5.  **1:M:** Migrate PK of "1" side to "M" side.
+6.  **M:N:** `NewTable(PK1, PK2, attrs)`.
+7.  **Unary 1:M:** Add `Ref_PK` column to the same table.
+8.  **Unary M:N:** `NewTable(PK1, PK2)`.
+9.  **Ternary:** `NewTable(PK1, PK2, PK3)`.
 
-### 2. Simple Explanation
-Think of it as **data pipe operations**:
-- **SELECT** (σ): Filter rows (like `WHERE`).
-- **PROJECT** (π): Pick specific columns (like `SELECT column1, column2`).
-- **JOIN** (⋈): Combine two tables based on a condition (like `INNER JOIN`).
-- **UNION** (∪), **INTERSECT** (∩), **DIFFERENCE** (-): Combine rows from two tables (like `UNION`, `INTERSECT`, `EXCEPT` in SQL).
-- **RENAME** (ρ): Change column or table names.
+**Normalization Rules:**
+- **1NF:** Remove repeating groups. Assign a PK.
+- **2NF:** Remove partial dependencies (If PK is composite, check if any attributes depend on only *part* of the key).
+- **3NF:** Remove transitive dependencies (No `PK → NonKey → NonKey` allowed). 
 
-### 3. Core Operations Overview
+**Anomaly Types:**
+- **Insertion:** Can't add a new record until you have the complete PK.
+- **Deletion:** Deleting one record accidentally deletes valuable data about another entity.
+- **Modification:** Changing a value requires updating it in multiple redundant rows. 
 
-```mermaid
-graph TD
-    Input1[Table A] --> Op{Relational Operation}
-    Input2[Table B] --> Op
-    Op --> Output[New Table]
-    
-    subgraph Examples
-        direction LR
-        Sel[SELECT \n σ age>18 (Student)]
-        Proj[PROJECT \n π name (Student)]
-        Join[JOIN \n Student ⋈ Enroll]
-    end
-```
-
-### 4. Software Engineer Perspective
-When you write an SQL query, the DBMS translates it into relational algebra expressions, then an **Optimizer** chooses the most efficient sequence of operations (e.g., doing SELECT before JOIN to reduce data size). Understanding this helps us write efficient queries.
-
-### 5. Exam Perspective
-- **Write** relational algebra expressions for a given query.
-- **Define** basic operations (σ, π, ⋈, ∪, ∩, -).
-- **Explain** why relational algebra is important (it is the foundation of query optimization).
-- Often asked as a short question (2-5 marks).
-
-### 6. Quick Revision Box
-- σ (Sigma) = Filter rows.
-- π (Pi) = Project columns.
-- ⋈ (Join) = Combine tables.
-- Operations are composable (output of one is input to another).
-- Foundation of SQL.
-
----
-
-## Mindset Summary – Connecting to Part 5
-
-```mermaid
-flowchart LR
-    subgraph Done[Part 4 Complete]
-        RM[Relational Model]
-        Keys[Keys & Constraints]
-        Map[ER Mapping Rules]
-        Algebra[Relational Algebra]
-    end
-    subgraph Next[Part 5 - Normalization]
-        Issues[Redundancy & Anomalies]
-        FD[Functional Dependencies]
-        NF[1NF, 2NF, 3NF, BCNF]
-    end
-    Done --> Next
-    Next --> SQL[SQL Queries]
-```
-
-- The **Relational Model** gives us the strict, mathematical structure for our tables.
-- **Keys** ensure integrity and enable connections.
-- **Mapping rules** are our bread-and-butter for translating client requirements into actual database structures.
-- **Relational Algebra** is the theory that powers SQL.
-
-As a software engineer, you will spend a huge amount of time designing schemas (applying these mapping rules). Next, we will take these relational schemas and **Normalize** them to eliminate redundancy, ensuring your database remains lean, fast, and anomaly-free as it scales.
-
----
+**Final Exam Tip:** When solving mapping questions, always **underline the Primary Keys** and **dash-underline the Foreign Keys** in your answer. This is standard practice for Relational Schemas and signals to the examiner that you understand the difference.
