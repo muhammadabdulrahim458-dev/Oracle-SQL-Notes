@@ -6,8 +6,9 @@
     "databasedesign_erd",
     "relationalModel",
     "EERD",
-    "sql",
+    "Labs",
     "normalization",
-    "test"
+    "test",
+    "sql"
   ]
 }
