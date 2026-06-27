@@ -511,3 +511,371 @@ GROUP BY p.ProductDescription;
 ```
 
 Mastering multi-table queries is the single most important skill for a database professional. Practice writing JOINs and Subqueries by hand, and always ask yourself: "Which tables do I need, and how are they connected?"
+
+
+---
+
+# Special Practice Section
+
+
+### Table 1: Suppliers
+
+| SupplierID | SupplierName   | Country |
+| :---       | :---           | :---    |
+| 1          | TechCorp       | USA     |
+| 2          | GadgetWorld    | China   |
+| 3          | HomeEssentials | Germany |
+| 4          | SmartSupply    | Japan   |
+
+---
+
+### Table 2: Customers
+
+| CustomerID | CustomerName | City     | JoinDate   |
+| :---       | :---         | :---     | :---       |
+| 1          | John Doe     | New York | 2024-01-15 |
+| 2          | Alice Smith  | London   | 2024-03-20 |
+| 3          | Bob Johnson  | Paris    | 2024-05-10 |
+| 4          | Clara Lee    | Tokyo    | 2024-07-01 |
+| 5          | David Brown  | Berlin   | 2024-08-15 |
+| 6          | Emma Wilson  | Rome     | 2025-01-01 |
+
+---
+
+### Table 3: Products
+
+| ProductID | ProductName | Category     | Price  | Stock | SupplierID |
+| :---      | :---        | :---         | :---   | :---  | :---       |
+| 1         | Laptop      | Electronics  | 1200.00| 10    | 1          |
+| 2         | Smartphone  | Electronics  | 800.00 | 15    | 1          |
+| 3         | Monitor     | Electronics  | 300.00 | 20    | 1          |
+| 4         | Tablet      | Electronics  | 500.00 | 10    | 1          |
+| 5         | Desk        | Furniture    | 450.00 | 5     | 2          |
+| 6         | Chair       | Furniture    | 250.00 | 10    | 2          |
+| 7         | Bookshelf   | Furniture    | 180.00 | 8     | 3          |
+
+---
+
+### Table 4: Orders
+
+| OrderID | CustomerID | OrderDate  | TotalAmount | Status    |
+| :---    | :---       | :---       | :---        | :---      |
+| 1       | 1          | 2024-02-10 | 1950.00     | Shipped   |
+| 2       | 2          | 2024-04-15 | 1300.00     | Delivered |
+| 3       | 3          | 2024-06-20 | 950.00      | Shipped   |
+| 4       | 1          | 2024-07-25 | 800.00      | Delivered |
+| 5       | 4          | 2024-09-01 | 1320.00     | Pending   |
+| 6       | 5          | 2024-10-10 | 265.00      | Shipped   |
+| 7       | 2          | 2024-11-05 | 300.00      | Delivered |
+| 8       | 3          | 2024-12-15 | 700.00      | Shipped   |
+| 9       | 4          | 2025-01-20 | 950.00      | Delivered |
+| 10      | 5          | 2025-02-25 | 2000.00     | Shipped   |
+
+---
+
+### Table 5: OrderItems
+
+| OrderItemID | OrderID | ProductID | Quantity | UnitPrice |
+| :---        | :---    | :---      | :---     | :---      |
+| 1           | 1       | 1         | 1        | 1200.00   |
+| 2           | 1       | 3         | 2        | 300.00    |
+| 3           | 1       | 12        | 1        | 150.00    |
+| 4           | 2       | 2         | 1        | 800.00    |
+| 5           | 2       | 4         | 1        | 500.00    |
+| 6           | 3       | 5         | 1        | 450.00    |
+| 7           | 3       | 6         | 2        | 250.00    |
+| 8           | 4       | 3         | 1        | 300.00    |
+| 9           | 4       | 4         | 1        | 500.00    |
+| 10          | 5       | 1         | 1        | 1200.00   |
+
+---
+
+
+```mermaid
+erDiagram
+    Customers {
+        int CustomerID PK
+        string CustomerName
+        string City
+        date JoinDate
+    }
+    Suppliers {
+        int SupplierID PK
+        string SupplierName
+        string Country
+    }
+    Products {
+        int ProductID PK
+        string ProductName
+        string Category
+        decimal Price
+        int Stock
+        int SupplierID FK
+    }
+    Orders {
+        int OrderID PK
+        int CustomerID FK
+        date OrderDate
+        decimal TotalAmount
+        string Status
+    }
+    OrderItems {
+        int OrderItemID PK
+        int OrderID FK
+        int ProductID FK
+        int Quantity
+        decimal UnitPrice
+    }
+    Customers ||--o{ Orders : places
+    Suppliers ||--o{ Products : supplies
+    Orders ||--|{ OrderItems : contains
+    Products ||--o{ OrderItems : "ordered in"
+```
+
+
+### 2. ERD 
+
+```mermaid
+erDiagram
+    Customers {
+        int CustomerID PK
+        string CustomerName
+        string City
+        date JoinDate
+    }
+    Suppliers {
+        int SupplierID PK
+        string SupplierName
+        string Country
+    }
+    Products {
+        int ProductID PK
+        string ProductName
+        string Category
+        decimal Price
+        int Stock
+        int SupplierID FK
+    }
+    Orders {
+        int OrderID PK
+        int CustomerID FK
+        date OrderDate
+        decimal TotalAmount
+        string Status
+    }
+    OrderItems {
+        int OrderItemID PK
+        int OrderID FK
+        int ProductID FK
+        int Quantity
+        decimal UnitPrice
+    }
+
+    Customers ||--o{ Orders : places
+    Suppliers ||--o{ Products : supplies
+    Orders ||--|{ OrderItems : contains
+    Products ||--o{ OrderItems : "ordered in"
+```
+
+---
+
+### 3. SQL Query Questions (Mixed Difficulty)
+
+1. Write a query to retrieve the `OrderID`, `OrderDate`, and the corresponding `CustomerName` for every order in the system.
+
+2. Write a query to find the `ProductName` and `Price` of the single most expensive product in the inventory.
+
+3. Write a query to display the `ProductName` and the total quantity sold (sum of `Quantity` from `OrderItems`) for each product, sorted from most sold to least sold.
+
+4. Write a query to show the `OrderID`, `CustomerName`, `ProductName`, and `Quantity` for all orders placed after `'2025-01-01'`.
+
+5. Find the names of all customers who have never placed an order.
+
+6. Write a query to find all products whose `Price` is strictly greater than the average price of products within their own `Category`.
+
+7. Find customers who have placed more than 5 orders. Display their `CustomerName` and the total number of orders they have placed.
+
+8. Identify the suppliers who supply every single product that belongs to the `'Electronics'` category.
+
+9. Write a query to display each `OrderID`, its `TotalAmount`, and the historical average `TotalAmount` of all orders placed by that specific customer.
+
+10. List the names of customers who have spent a total (`SUM(TotalAmount)` across all their orders) that is greater than the overall average total spending of all customers in the system.
+
+11. Write a query to find the product with the second-highest price within each product category. Display `Category`, `ProductName`, and `Price`.
+
+12. Find all customers who have placed an order containing the product that has the maximum price among all products in the entire catalog.
+
+
+## Solution:
+
+
+### Solution 1
+
+
+```sql
+SELECT o.OrderID, o.OrderDate, c.CustomerName
+FROM Orders o
+JOIN Customers c ON o.CustomerID = c.CustomerID;
+```
+
+---
+
+### Solution 2
+```sql
+SELECT ProductName, Price
+FROM Products
+WHERE Price = (SELECT MAX(Price) FROM Products);
+```
+
+---
+
+### Solution 3
+```sql
+SELECT p.ProductName, SUM(oi.Quantity) AS TotalSold
+FROM Products p
+JOIN OrderItems oi ON p.ProductID = oi.ProductID
+GROUP BY p.ProductName
+ORDER BY TotalSold DESC;
+```
+
+---
+
+### Solution 4
+```sql
+SELECT o.OrderID, c.CustomerName, p.ProductName, oi.Quantity
+FROM Orders o
+JOIN Customers c ON o.CustomerID = c.CustomerID
+JOIN OrderItems oi ON o.OrderID = oi.OrderID
+JOIN Products p ON oi.ProductID = p.ProductID
+WHERE o.OrderDate > DATE '2025-01-01';
+```
+
+---
+
+### Solution 5
+```sql
+SELECT CustomerName
+FROM Customers c
+LEFT JOIN Orders o ON c.CustomerID = o.CustomerID
+WHERE o.OrderID IS NULL;
+```
+
+*Alternative using NOT EXISTS:*
+```sql
+SELECT CustomerName
+FROM Customers c
+WHERE NOT EXISTS (SELECT 1 FROM Orders o WHERE o.CustomerID = c.CustomerID);
+```
+
+---
+
+### Solution 6
+```sql
+SELECT ProductName, Price
+FROM Products p1
+WHERE Price > (
+    SELECT AVG(Price)
+    FROM Products p2
+    WHERE p2.Category = p1.Category
+);
+```
+
+---
+
+### Solution 7
+```sql
+SELECT c.CustomerName, COUNT(o.OrderID) AS OrderCount
+FROM Customers c
+JOIN Orders o ON c.CustomerID = o.CustomerID
+GROUP BY c.CustomerName
+HAVING COUNT(o.OrderID) > 5;
+```
+
+---
+
+### Solution 8
+```sql
+SELECT s.SupplierName
+FROM Suppliers s
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM Products p
+    WHERE p.Category = 'Electronics'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM Products p2
+          WHERE p2.SupplierID = s.SupplierID
+            AND p2.ProductID = p.ProductID
+      )
+);
+```
+
+---
+
+### Solution 9
+*Using a scalar subquery in the SELECT clause (traditional exam style):*
+```sql
+SELECT o.OrderID,
+       o.TotalAmount,
+       (SELECT AVG(o2.TotalAmount)
+        FROM Orders o2
+        WHERE o2.CustomerID = o.CustomerID) AS CustomerAvgOrderValue
+FROM Orders o;
+```
+
+*For completeness – Oracle analytic equivalent (even cleaner):*
+```sql
+SELECT OrderID,
+       TotalAmount,
+       AVG(TotalAmount) OVER (PARTITION BY CustomerID) AS CustomerAvgOrderValue
+FROM Orders;
+```
+
+---
+
+### Solution 10
+```sql
+WITH CustomerTotals AS (
+    SELECT CustomerID, SUM(TotalAmount) AS TotalSpent
+    FROM Orders
+    GROUP BY CustomerID
+)
+SELECT c.CustomerName
+FROM Customers c
+JOIN CustomerTotals ct ON c.CustomerID = ct.CustomerID
+WHERE ct.TotalSpent > (SELECT AVG(TotalSpent) FROM CustomerTotals);
+```
+
+---
+
+### Solution 11
+```sql
+WITH RankedProducts AS (
+    SELECT Category,
+           ProductName,
+           Price,
+           DENSE_RANK() OVER (PARTITION BY Category ORDER BY Price DESC) AS rnk
+    FROM Products
+)
+SELECT Category, ProductName, Price
+FROM RankedProducts
+WHERE rnk = 2;
+```
+
+---
+
+### Solution 12
+```sql
+SELECT DISTINCT c.CustomerName
+FROM Customers c
+JOIN Orders o ON c.CustomerID = o.CustomerID
+WHERE o.OrderID IN (
+    SELECT OrderID
+    FROM OrderItems
+    WHERE ProductID IN (
+        SELECT ProductID
+        FROM Products
+        WHERE Price = (SELECT MAX(Price) FROM Products)
+    )
+);
+```
