@@ -284,6 +284,9 @@ flowchart TD
 - Any non-key attributes of the relationship (like `Quantity` used in the assembly) are included in the associative relation.
 
 ### Diagram: Unary M:N Relationship (Item Components)
+
+![diagram](/unarymn.png)
+
 ```mermaid
 flowchart LR
     subgraph Step_1["Step 1: EER Diagram"]
@@ -297,6 +300,7 @@ flowchart LR
     end
     item2 --> comp
 ```
+
 
 **Explanation of the `COMPONENT` table:**
 - `ItemNo`: The parent item being built.
