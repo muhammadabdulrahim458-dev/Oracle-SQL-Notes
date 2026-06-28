@@ -6,6 +6,7 @@
     "databasedesign_erd",
     "relationalModel",
     "EERD",
+    "joinandsubquery",
     "Labs",
     "normalization",
     "test",
