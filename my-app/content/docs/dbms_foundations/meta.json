@@ -1,6 +1,6 @@
 {
   "title": "DBMS Foundations",
-  
+  "icon": "Database",
   "pages": [
     "index",
     "definition",

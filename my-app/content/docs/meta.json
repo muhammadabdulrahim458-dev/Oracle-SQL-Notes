@@ -4,12 +4,11 @@
     "index",
     "dbms_foundations",
     "databasedesign_erd",
-    "relationalModel",
     "EERD",
     "joinandsubquery",
-    "Labs",
+    "relationalModel",
     "normalization",
-    "test",
+    "Labs",
     "sql"
   ]
 }

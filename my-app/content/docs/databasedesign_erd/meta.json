@@ -1,5 +1,6 @@
 {
   "title": "Database Design & ERD",
+  "icon": "NotebookPen",
   "pages": [
     "index",
     "ERD",
