@@ -8,6 +8,7 @@
     "joinandsubquery",
     "relationalModel",
     "normalization",
+    "advancedsql",
     "Labs",
     "sql"
   ]

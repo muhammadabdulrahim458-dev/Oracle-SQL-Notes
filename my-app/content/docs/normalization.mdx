@@ -1,228 +1,565 @@
 ---
-title: Normalization
+title: Normalization (Lecture 12)
 icon: Scale
-description: Normalization
+description: Lecture 12 - Database Normalization
 ---
 
 
-## The Big Picture Flow (Fixing the Design)
+## 1. Introduction to Normalization
+**Normalization** is a formal process used to decide which attributes should be grouped together in a database table (relation) so that all data anomalies (errors) are removed.
+
+*   **Where to apply it?** You can apply normalization in two stages:
+    1. During **Logical Database Design**: Use it as a quality check for tables obtained from your EER diagrams.
+    2. When **Reverse-Engineering**: Older legacy systems often have redundant tables and data anomalies; normalization fixes this.
+
+**Main Goals of Normalization:**
+*   Minimize data redundancy, saving storage space and avoiding anomalies.
+*   Simplify the enforcement of referential integrity constraints (ensuring foreign keys correctly point to primary keys).
+*   Make it easier to insert, update, and delete data without breaking the database.
+*   Provide a better, stronger foundation for future database growth.
+
+**Key Rule:** Normalization relies on **Functional Dependencies** and **Normal Forms**, which are based on business rules and relationships, not on how the user interface displays the data.
+
+---
+
+## 2. The Six Normal Forms (Overview)
+The lecture introduces normal forms. For the purpose of this lecture, we focus strictly on **1NF, 2NF, and 3NF**.
+
+*   **1NF (First Normal Form):** Any multivalued attributes (repeating groups) must be removed. The intersection of every row and column must contain a single value.
+*   **2NF (Second Normal Form):** Any partial functional dependencies must be removed (every non-key attribute must depend on the *whole* primary key).
+*   **3NF (Third Normal Form):** Any transitive dependencies must be removed (non-key attributes must depend *only* on the primary key).
+*   **BCNF (Boyce-Codd Normal Form):** Removes anomalies resulting from multiple candidate keys.
+*   **4NF (Fourth Normal Form):** Removes multivalued dependencies.
+*   **5NF (Fifth Normal Form):** Removes remaining join dependencies.
+
+**Relationship between Normal Forms (Visual Diagram):**
+*(This diagram represents the concentric layers of normalization: 1NF is the largest group, 5NF is the smallest).*
 
 ```mermaid
 flowchart LR
-    subgraph Part4[Part 4 - Relational Model]
-        Tables[Tables & Keys Created]
+    subgraph NF1 ["1NF (No Repeating Groups)"]
+        subgraph NF2 ["2NF (No Partial Dependencies)"]
+            subgraph NF3 ["3NF (No Transitive Dependencies)"]
+                subgraph BCNF ["BCNF (Multiple Candidate Keys Solved)"]
+                    subgraph NF4 ["4NF (Multivalued Dependencies Solved)"]
+                        subgraph NF5 ["5NF (Join Dependencies Solved)"]
+                            Higher["Higher Normal Forms"]
+                        end
+                    end
+                end
+            end
+        end
     end
-    subgraph Part5[Part 5 - Normalization]
-        Tables --> Problem["The Problem:<br>Redundancy & Anomalies"]
-        Problem --> FD[Functional Dependencies]
-        FD --> NF[1NF → 2NF → 3NF → BCNF]
-        NF --> Clean[Clean, Anomaly-Free Schema]
-    end
-    Part5 --> Next[Next: SQL Queries]
+    style NF1 fill:#fff,stroke:#333,stroke-dasharray: 5 5
+    style NF2 fill:#fff,stroke:#333,stroke-dasharray: 5 5
+    style NF3 fill:#fff,stroke:#333,stroke-dasharray: 5 5
+    style BCNF fill:#fff,stroke:#333,stroke-dasharray: 5 5
+    style NF4 fill:#fff,stroke:#333,stroke-dasharray: 5 5
+    style NF5 fill:#fff,stroke:#333,stroke-dasharray: 5 5
 ```
 
-**Bridge**: We mapped our ERD to tables. But is it **good**? If we just throw everything into one table, we get duplicates, wasted space, and data corruption risks. **Normalization** is the science of refining tables to eliminate these problems—think of it as **refactoring** your database schema.
+---
+
+## 3. The 4-Step Normalization Process
+The lecture divides the process into four steps:
+*   **Step 0:** Represent the user view in a tabular form.
+*   **Step 1:** Convert to First Normal Form (1NF).
+*   **Step 2:** Convert to Second Normal Form (2NF).
+*   **Step 3:** Convert to Third Normal Form (3NF).
+*   *(Step 4: Further Normalization to 4NF, 5NF, etc., if needed).*
+
+### Step 0: The Starting View
+Here is a raw invoice view from Pine Valley Furniture Company. This is **not** a valid database relation yet because it contains repeating groups.
+
+**PVFC Customer Invoice View (Step 0):**
+*(Figure 04 in slides)*
+*   **Customer ID:** 2
+*   **Customer Name:** Value Furniture
+*   **Address:** 15145 S.W. 17th St., Plano TX 75022
+*   **Order ID:** 1006
+*   **Order Date:** 10/24/2010
+*   **Products:**
+    1.  Product ID 7, Dining Table, Natural Ash, 2 units, $800.00 each ($1,600.00 total)
+    2.  Product ID 5, Writer’s Desk, Cherry, 2 units, $325.00 each ($650.00 total)
+    3.  Product ID 4, Entertainment Center, Natural Maple, 1 unit, $650.00 each ($650.00 total)
+*   **Total:** $2,900.00
+
+**Initial Raw Table Data (Figure 05):**
+*(Note: The Product Description, Finish, and Price columns contain multiple values per single Order ID, which violates 1NF).*
+
+| Order ID | Order Date | Customer ID | Customer Name | Customer Address | Product ID | Product Description | Product Finish | Unit Price | Ordered Quantity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1006 | 10/24/2004 | 2 | Value Furniture | Plano, TX | 7, 5, 4 | Dining Table, Writer's Desk, Ent. Center | Natural Ash, Cherry, Natural Maple | 800.00, 325.00, 650.00 | 2, 2, 1 |
+| 1007 | 10/25/2004 | 6 | Furniture Gallery | Boulder, CO | 1, 4 | 4-Dr Dresser, Ent. Center | Oak, Natural Maple | 500.00, 650.00 | 4, 3 |
 
 ---
 
-## 1. What is Normalization & Why Do We Need It?
+### Step 1: Convert to First Normal Form (1NF)
+**Rule:** A table must have a **single value** at the intersection of every row and column. There can be no "repeating groups."
 
-### 1. Big Picture
-Normalization is a systematic process of organizing columns and tables to reduce **data redundancy** and avoid **update anomalies**. It ensures your database is lean, consistent, and maintainable.
+To fix the raw table, we flatten it by putting the repeating product data into separate rows. We will also identify a **Composite Primary Key** (Order ID + Product ID) to uniquely identify every row.
 
-### 2. Simple Explanation
-Imagine a single spreadsheet containing `OrderID`, `CustomerName`, `CustomerAddress`, and `Product`. If a customer moves, you have to update their address in *every* row of every order they ever placed—a nightmare. Normalization splits this into separate tables (`Customers`, `Orders`, `Products`) linked by keys. **Change data in one place, and it updates everywhere.**
+**Table in 1NF (Figure 5-26 INVOICE relation):**
+*(Each row now represents a single order line).*
 
-### 3. The Three Anomalies (Why We Normalize)
+| Order ID | Order Date | Customer ID | Customer Name | Customer Address | Product ID | Product Description | Product Finish | Unit Price | Ordered Quantity |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1006 | 10/24/2004 | 2 | Value Furniture | Plano, TX | 7 | Dining Table | Natural Ash | 800.00 | 2 |
+| 1006 | 10/24/2004 | 2 | Value Furniture | Plano, TX | 5 | Writer's Desk | Cherry | 325.00 | 2 |
+| 1006 | 10/24/2004 | 2 | Value Furniture | Plano, TX | 4 | Entertainment Center | Natural Maple | 650.00 | 1 |
+| 1007 | 10/25/2004 | 6 | Furniture Gallery | Boulder, CO | 1 | 4-Dr Dresser | Oak | 500.00 | 4 |
+| 1007 | 10/25/2004 | 6 | Furniture Gallery | Boulder, CO | 4 | Entertainment Center | Natural Maple | 650.00 | 3 |
 
-| Anomaly | Description | Example (in a bad table) |
-| :--- | :--- | :--- |
-| **Insert Anomaly** | Can't add data without other data. | Can't add a new course until a student enrolls in it. |
-| **Update Anomaly** | Same data repeated; updating one copy misses others. | Updating a professor's office in one row but not all rows. |
-| **Delete Anomaly** | Deleting one fact accidentally deletes another. | Deleting the last student in a course deletes the course itself. |
-
-### 4. Real World Example
-- **E-commerce**: If `Order` table stores `CustomerName` and `CustomerAddress` directly, updating an address requires updating every past order. **Bad design**.
-- **Solution**: Separate `Customers` table. `Orders` store only `customer_id` (FK).
+*Note:* This table is in 1NF, but it is **not** well-structured yet. It still suffers from anomalies.
 
 ---
 
-## 2. Functional Dependencies (The Math Behind Normalization)
+## 4. Functional Dependencies and Keys
+To move beyond 1NF, we must understand **Functional Dependencies (FDs)**.
 
-### 1. Big Picture
-To normalize, we must understand **dependencies**—how one attribute determines another. This is the rulebook for splitting tables.
-
-### 2. Simple Explanation
-An attribute **X** functionally determines **Y** (written `X → Y`) if, for every valid instance, knowing the value of **X** gives you exactly one value of **Y**.
-
-- **Example**: `Student_ID → Student_Name`. If you know the ID, you know the name. The name is functionally dependent on the ID.
-- **Full Functional Dependency**: In a composite key, the attribute depends on the **whole** key, not just a part.
-- **Transitive Dependency**: When `A → B` and `B → C`, then `A → C` transitively.
-
-### 3. Dependency Visualization
+### What is a Functional Dependency?
+For any relation R, Attribute **B** is functionally dependent on Attribute **A** if, for every single valid instance of A, that value of A uniquely determines the value of B.
+*   **Notation:** A → B (A determines B).
+*   **Example:** `Social Security Number → Name` (Every unique SSN points to exactly one Name).
+*   **Visual Representation:** *Left side = Determinant*, *Right side = Dependent*.
 
 ```mermaid
 flowchart LR
-    subgraph FD[Functional Dependency]
-        X[Student_ID] -->|Determines| Y[Student_Name]
-    end
-    subgraph Transitive[Transitive Dependency]
-        A[Zip_Code] --> B[City]
-        B --> C[State]
-        A -.->|Transitively| C
-    end
+    A["Attribute A<br>(Determinant)"] --> B["Attribute B<br>(Dependent)"]
 ```
 
-### 4. Software Engineer Perspective
-We identify FDs during requirements analysis. In code, FDs map to **hash maps** or **dictionaries**—the key determines the value. When designing APIs, a `GET /students/{id}` endpoint relies on the FD `Student_ID → all_other_attributes`.
+**Lecture Example (Staff vs Position):**
+*   `staffNo → position` is true. (If you know the Staff ID, you know their position).
+*   `position → staffNo` is **false**. (Knowing the position "Manager" does not uniquely identify a single staff member, because there could be multiple managers).
+*   *(These examples correspond to Figures 8a and 8b in the slides).*
+
+### Identifying Functional Dependencies using Sample Data (Example I - Figure 9)
+Let's look at a sample relation with attributes A, B, C, D, E.
+
+| A | B | C | D | E |
+| :---: | :---: | :---: | :---: | :---: |
+| a | b | z | w | q |
+| e | b | r | w | p |
+| a | d | z | w | t |
+| e | d | r | w | q |
+| a | f | z | s | t |
+| e | f | r | s | t |
+
+**Identifying the Functional Dependencies:**
+1.  **A → C (fd1) & C → A (fd2):** Whenever 'a' appears in column A, 'z' appears in column C, and vice versa. This is a 1:1 relationship. Therefore, A determines C, and C determines A.
+2.  **B → D (fd3):** Whenever 'b' or 'd' appears in B, 'w' appears in D. Whenever 'f' appears in B, 's' appears in D. Therefore, B determines D. *(Notice D → B is false, because 'w' maps to both 'b' and 'd')*.
+3.  **AB → E (fd4):** The combination of A and B (e.g., `(a,b)`) uniquely determines a specific value for E (e.g., `q`). Therefore, AB determines E.
+
+*(Attribute E does not determine A, B, C, or D).*
 
 ---
 
-## 3. The Normal Forms (1NF, 2NF, 3NF, BCNF)
+## 5. Anomalies and 2NF, 3NF
 
-### 1. Big Picture
-Normal Forms are **levels of strictness**. We move step-by-step from 1NF (basic) to BCNF (very strict). Most industry databases aim for **3NF** or **BCNF**.
+### Data Anomalies in 1NF
+The 1NF INVOICE table (Figure 5-26) suffers from 3 types of data anomalies:
+1.  **Insertion Anomaly:** If a new product is ordered for an existing customer, all customer data (Name, Address) must be re-entered, causing duplication.
+2.  **Deletion Anomaly:** If we delete the row for the Dining Table from Order 1006, we lose the specific information regarding that item's finish and price entirely.
+3.  **Update Anomaly:** If the price of product ID 4 changes, we have to update the Unit Price in *every row* where product ID 4 appears (multiple records).
 
-### 2. The Step-by-Step Evolution (Flowchart)
+**Why do these anomalies exist?**
+Because multiple entity types (`Customer`, `Order`, `Product`) have been stuffed into one single relation. This creates unnecessary dependencies between the entities.
+
+### Step 2: Second Normal Form (2NF)
+**Rule:** In 2NF, the table must be in 1NF, **AND** there must be **no partial functional dependencies**. 
+*(Meaning: No non-key attribute can be dependent on only *part* of the composite primary key. Every non-key attribute must be fully functionally dependent on the entire primary key).*
+
+**Example: Normalizing EMPLOYEE2 to 2NF (Figure 4-23)**
+The EMPLOYEE2 table below is in 1NF, but its primary key is `(EmpID, CourseTitle)`.
+
+**EMPLOYEE2 (Before 2NF):**
+
+| EmpID | Name | DeptName | Salary | CourseTitle | DateCompleted |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| 100 | Margaret Simpson | Marketing | 48,000 | SPSS | 6/19/201X |
+| 100 | Margaret Simpson | Marketing | 48,000 | Surveys | 10/7/201X |
+| 110 | Chris Lucero | Info Systems | 43,000 | Visual Basic | 1/12/201X |
+
+**Identifying the Partial Dependencies:**
+*   `Name`, `DeptName`, and `Salary` depend **only on EmpID**, not on `CourseTitle`. This is a **Partial Dependency**.
+*   `DateCompleted` depends on the **whole** key `(EmpID, CourseTitle)`. This is a **Full Dependency**.
+
+**EMPLOYEE2 in 2NF (Split into two tables):**
+To put this in 2NF, we split the relation into two:
+1.  `EMPLOYEE1 (EmpID, Name, DeptName, Salary)`
+2.  `EMPLOYEECOURSE (EmpID, CourseTitle, DateCompleted)`
 
 ```mermaid
-flowchart TD
-    Raw[Unnormalized Table] -->|"1. Ensure Atomic Values"| NF1[1NF]
-    NF1 -->|"2. Remove Partial Dependencies<br>(FK to separate tables)"| NF2[2NF]
-    NF2 -->|"3. Remove Transitive Dependencies"| NF3[3NF]
-    NF3 -->|"4. Every determinant is a Candidate Key"| BCNF[BCNF]
+flowchart LR
+    subgraph E1["EMPLOYEE1 (2NF)"]
+        direction LR
+        E1_PK["EmpID (PK)"] --> E1_N1["Name"]
+        E1_PK --> E1_N2["DeptName"]
+        E1_PK --> E1_N3["Salary"]
+    end
+
+    subgraph EC["EMPLOYEECOURSE (2NF)"]
+        direction LR
+        EC_PK1["EmpID (PK, FK)"]
+        EC_PK2["CourseTitle (PK)"]
+        EC_PK1 & EC_PK2 --> EC_N1["DateCompleted"]
+    end
+```
+
+---
+
+### Step 3: Third Normal Form (3NF)
+**Rule:** In 3NF, the table must be in 2NF, **AND** it must have **no transitive dependencies**. 
+*(Meaning: A non-key attribute must not be dependent on the primary key via another non-key attribute).*
+
+**What is a Transitive Dependency?**
+If `A → B` and `B → C`, then `A → C` is a transitive dependency. We want to remove the step `B → C`.
+*   *Example:* `OrderID → CustomerID` AND `CustomerID → CustomerAddress`. Therefore, `OrderID → CustomerAddress` is transitive. It creates redundant data.
+
+**Example: Normalizing INVOICE to 3NF (Figure 5-27)**
+The 1NF Invoice table is shown with its dependencies:
+*   Primary Key = `(Order_ID, Product_ID)`
+*   `Order_ID` determines `Order_Date`, `Customer_ID`, `Customer_Name`, `Customer_Address`.
+*   `Customer_ID` determines `Customer_Name`, `Customer_Address` (This is the Transitive Dependency!).
+*   `Product_ID` determines `Product_Description`, `Product_Finish`, `Unit_Price`.
+*   `(Order_ID, Product_ID)` determines `Ordered_Quantity`.
+
+**INVOICE in 3NF (Split into three tables):**
+To remove transitive dependencies, we separate `Customer` information into its own table and `Product` information into its own table. We are left with 3 tables:
+
+1.  `ORDER (OrderID, OrderDate, CustomerID)` → PK: `OrderID`
+2.  `CUSTOMER (CustomerID, CustomerName, CustomerAddress)` → PK: `CustomerID`
+3.  `ORDER_LINE (OrderID, ProductID, Ordered_Quantity)` → PK: `(OrderID, ProductID)`
+4.  `PRODUCT (ProductID, ProductDescription, ProductFinish, UnitPrice)` → PK: `ProductID`
+
+```mermaid
+flowchart LR
+    subgraph O["ORDER (3NF)"]
+        direction LR
+        O_PK["OrderID (PK)"] --> O_Date["OrderDate"]
+        O_PK --> O_FK["CustomerID (FK)"]
+    end
+
+    subgraph C["CUSTOMER (3NF)"]
+        direction LR
+        C_PK["CustomerID (PK)"] --> C_Name["CustomerName"]
+        C_PK --> C_Addr["CustomerAddress"]
+    end
+
+    subgraph OL["ORDER LINE (3NF)"]
+        direction LR
+        OL_PK1["OrderID (PK, FK)"]
+        OL_PK2["ProductID (PK, FK)"]
+        OL_PK1 & OL_PK2 --> OL_Qty["Ordered_Quantity"]
+    end
+
+    subgraph P["PRODUCT (3NF)"]
+        direction LR
+        P_PK["ProductID (PK)"] --> P_Desc["ProductDescription"]
+        P_PK --> P_Fin["ProductFinish"]
+        P_PK --> P_Price["UnitPrice"]
+    end
+
+    O_PK --> OL_PK1
+    P_PK --> OL_PK2
+    O_FK --> C_PK
+```
+
+---
+
+# Section 6: Solved Activities & Exercises
+We now apply the normalization rules to four detailed activities provided in the lecture slides.
+
+---
+
+## ACTIVITY I: PART SUPPLIER (Page 58-66)
+**Scenario:** We have a table `PART_SUPPLIER` showing parts and the vendors who supply them. 
+
+**Sample Data (Table 4-3):**
+| Part No | Description | Vendor Name | Address | Unit Cost |
+| :--- | :--- | :--- | :--- | :--- |
+| 1234 | Logic chip | Fast Chips<br />Smart Chips | Cupertino<br />Phoenix | 10.00<br />8.00 |
+| 5678 | Memory chip | Fast Chips<br />Quality Chips<br />Smart Chips | Cupertino<br />Austin<br />Phoenix | 3.00<br />2.00<br />5.00 |
+
+**Activity I Solutions:**
+
+**Part a: Convert to 1NF relation**
+*(Fill in empty cells to remove the multivalued attributes).*
+
+| Part No | Description | Vendor Name | Address | Unit Cost |
+| :--- | :--- | :--- | :--- | :--- |
+| 1234 | Logic Chip | Fast Chips | Cupertino | 10.00 |
+| 1234 | Logic Chip | Smart Chips | Phoenix | 8.00 |
+| 5678 | Memory Chip | Fast Chips | Cupertino | 3.00 |
+| 5678 | Memory Chip | Quality Chips | Austin | 2.00 |
+| 5678 | Memory Chip | Smart Chips | Phoenix | 5.00 |
+
+**Part b: List Functional Dependencies and Candidate Key**
+*   `Part No → Description`
+*   `Vendor Name → Address`
+*   `(Part No, Vendor Name) → Unit Cost`
+*   **Candidate Key:** `(Part No, Vendor Name)`
+
+**Part c: Identify the Data Anomalies**
+*   **Insertion Anomaly:** To insert a new part, you must have both `Part No` and `Vendor Name`.
+*   **Delete Anomaly:** If we delete the only row for a specific vendor, we lose their address entirely from the database.
+*   **Update Anomaly:** If a vendor moves to a new city, we must update the `Address` in *every single row* where that vendor appears (duplicate data).
+
+**Part d: Draw a Relational Schema showing FDs**
+```mermaid
+flowchart LR
+    subgraph PS["PART_SUPPLIER"]
+        direction LR
+        PS_PK1["Part_No"]
+        PS_PK2["Vendor_Name"]
+        PS_PK1 --> PS_Desc["Description"]
+        PS_PK2 --> PS_Addr["Address"]
+        PS_PK1 & PS_PK2 --> PS_Cost["Unit_Cost"]
+    end
+```
+
+**Part e: What Normal Form is this relation in?**
+*   **1NF.** It is in 1NF because it has no repeating groups.
+*   It is **NOT in 2NF** because `Description` depends only on `Part No` (partial dependency), and `Address` depends only on `Vendor Name` (partial dependency).
+
+**Part f: Develop a set of 3NF relations**
+We must split the table into three parts to remove partial dependencies.
+*   `PART (Part_No, Description)` → PK: `Part_No`
+*   `VENDOR (Vendor_Name, Address)` → PK: `Vendor_Name`
+*   `PART_SUPPLIER (Part_No, Vendor_Name, Unit_Cost)` → PK: `(Part_No, Vendor_Name)`, FK: `Part_No`, FK: `Vendor_Name`
+
+**Part g: Draw an E-R Diagram for the 3NF relations**
+```mermaid
+erDiagram
+    PART ||--o{ PART_SUPPLIER : "is supplied by"
+    VENDOR ||--o{ PART_SUPPLIER : "supplies"
+    PART {
+        string Part_No PK
+        string Description
+    }
+    PART_SUPPLIER {
+        string Part_No PK, FK
+        string Vendor_Name PK, FK
+        float Unit_Cost
+    }
+    VENDOR {
+        string Vendor_Name PK
+        string Address
+    }
+```
+
+---
+
+## ACTIVITY II: GRADE REPORT (Page 67-73)
+**Scenario:** A university grade report showing students, courses, instructors, and grades.
+
+**Sample Data (Table 4-4):**
+| Student ID | Student Name | Campus Address | Major | Course ID | Course Title | Instructor Name | Instructor Location | Grade |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 168300458 | Williams | 208 Brooks | IS | IS 350 | Database Mgt | Codd | B 104 | A |
+| 168300458 | Williams | 208 Brooks | IS | IS 465 | Systems Analysis | Parsons | B 317 | B |
+| 543291073 | Baker | 104 Phillips | Acctg | IS 350 | Database Mgt | Codd | B 104 | C |
+| 543291073 | Baker | 104 Phillips | Acctg | Acct 201 | Fund Acctg | Miller | H 310 | B |
+| 543291073 | Baker | 104 Phillips | Acctg | Mktg 300 | Intro Mktg | Bennett | B 212 | A |
+
+**Activity II Solutions:**
+
+**Part a: Draw a relational schema and diagram the FDs**
+*(Based on the data, the primary key is `(Student_ID, Course_ID)`)*
+*   FD1: `Student_ID → Student_Name, Campus_Address, Major`
+*   FD2: `Course_ID → Course_Title, Instructor_Name`
+*   FD3: `Instructor_Name → Instructor_Location` (Transitive dependency via Course_ID)
+*   FD4: `(Student_ID, Course_ID) → Grade`
+
+**Part b: In what normal form is this relation?**
+*   **1NF.** It is in 1NF, but has partial and transitive dependencies.
+
+**Part c: Decompose GRADE REPORT into a set of 3NF relations**
+We split it into 4 tables to remove dependencies:
+1.  `STUDENT (Student_ID, Student_Name, Campus_Address, Major)` → PK: `Student_ID`
+2.  `COURSE (Course_ID, Course_Title, Instructor_Name)` → PK: `Course_ID`, FK: `Instructor_Name`
+3.  `INSTRUCTOR (Instructor_Name, Instructor_Location)` → PK: `Instructor_Name`
+4.  `REGISTRATION (Student_ID, Course_ID, Grade)` → PK: `(Student_ID, Course_ID)`, FK: `Student_ID`, FK: `Course_ID`
+
+**Part d/e: Draw a relational schema with referential integrity constraints**
+```mermaid
+erDiagram
+    STUDENT ||--o{ REGISTRATION : "Registers for"
+    COURSE ||--o{ REGISTRATION : "Has"
+    COURSE }o--|| INSTRUCTOR : "Is taught by"
     
-    style Raw fill:#f9f9f9
-    style BCNF fill:#4CAF50,color:#fff
+    STUDENT {
+        string Student_ID PK
+        string Student_Name
+        string Campus_Address
+        string Major
+    }
+    REGISTRATION {
+        string Student_ID PK, FK
+        string Course_ID PK, FK
+        string Grade
+    }
+    COURSE {
+        string Course_ID PK
+        string Course_Title
+        string Instructor_Name FK
+    }
+    INSTRUCTOR {
+        string Instructor_Name PK
+        string Instructor_Location
+    }
 ```
-
-### 3. Detailed Table Breakdown
-
-| Normal Form | The Rule | What it Fixes | Violation Example |
-| :--- | :--- | :--- | :--- |
-| **1NF** | Atomic values; no repeating groups. | Multi-valued attributes. | A cell contains `"Math, Physics"`. |
-| **2NF** | In 1NF + No partial dependencies. (Every non-key attribute must depend on the **whole** primary key). | Partial dependency (wasted space). | A table with PK `(StudentID, CourseID)` has `InstructorName`—this depends only on `CourseID`, not the whole PK. |
-| **3NF** | In 2NF + No transitive dependencies. (Non-key attributes must depend *only* on the PK). | Transitive dependency (update anomalies). | `ZipCode → City → State`. `State` transitively depends on `ZipCode`, not directly on the PK. |
-| **BCNF** | In 3NF + Every determinant must be a candidate key. | Rare, complex overlapping keys. | A table where `Course` → `Instructor`, but `Instructor` is not a candidate key, yet determines `Office`. |
 
 ---
 
-## 4. Walkthrough: Normalizing a "Bad" Table
+## ACTIVITY III: SHIPPING MANIFEST (Page 74-79)
+**Scenario:** A shipping manifest showing shipments, captains, and items on board.
 
-### Scenario
-A university stores `Enrollment` data in one table:
-`Enrollment(StudentID, StudentName, CourseID, CourseTitle, Instructor, Grade)`
+**Sample Data (Table 4-5):**
+*(Summarized). Shipment ID 00-0001, Date 01/10/2015, Origin Boston, Destination Brazil, Ship Number 39, Captain Henry Moore (ID 002-15).*
+*   Item 3223: Concrete Form, Weight 500, Quantity 100, Total Weight 50,000.
+*   Item 3297: Steel Beam, Weight 872, Quantity 200, Total Weight 174,000.
+*(Note: The slides specifically state total weight is a derived attribute, so we exclude it from FDs).*
 
-**Step 0: Identify the PK and FDs**
-- PK: `{StudentID, CourseID}` (Composite).
-- FDs: `StudentID → StudentName`; `CourseID → CourseTitle, Instructor`.
+**Activity III Solutions:**
 
-**Step 1: Check 1NF**
-- All values are atomic. ✅ (No lists).
+**Part a: Draw relational schema and FDs**
+*   `Shipment_ID → Shipment_Date, Expected_Arrival_Date, Origin, Destination, Ship_Number, Captain_ID`
+*   `Captain_ID → Captain_Name` (Transitive dependency)
+*   `Item_Number → Type, Description, Weight`
+*   `(Shipment_ID, Item_Number) → Quantity` (Full dependency)
 
-**Step 2: Check 2NF**
-- **Violation**: Partial Dependency. `StudentName` depends only on `StudentID` (part of PK). `CourseTitle` depends only on `CourseID` (part of PK).
-- **Fix**: Remove them to separate tables.
+**Part b: In what normal form is this relation?**
+*   **1NF.**
 
-*Resulting Tables:*
-- `Student(StudentID, StudentName)`
-- `Course(CourseID, CourseTitle, Instructor)`
-- `Enrollment(StudentID, CourseID, Grade)`
+**Part c: Decompose MANIFEST into a set of 3NF relations**
+1.  `SHIPMENT (Shipment_ID, Shipment_Date, Expected_Arrival_Date, Origin, Destination, Ship_Number, Capt_ID)` → PK: `Shipment_ID`, FK: `Capt_ID`
+2.  `CAPTAIN (Capt_ID, Capt_Name)` → PK: `Capt_ID`
+3.  `ITEM (Item_Number, Type, Description, Weight)` → PK: `Item_Number`
+4.  `SHIPMENT_LINE (Shipment_ID, Item_Number, Quantity)` → PK: `(Shipment_ID, Item_Number)`, FK: `Shipment_ID`, FK: `Item_Number`
 
-**Step 3: Check 3NF**
-- In `Course` table: `CourseID → Instructor`. Are there transitive dependencies? If `Instructor → Office` existed, we'd need to fix it. Let's assume no.
-- In `Enrollment`: `StudentID` and `CourseID` just point to FKs. No transitive deps. ✅
+**Part d/e: Relational Schema with Referential Integrity Constraints**
+```mermaid
+erDiagram
+    SHIPMENT ||--|{ SHIPMENT_LINE : "contains"
+    ITEM ||--o{ SHIPMENT_LINE : "is part of"
+    SHIPMENT }o--|| CAPTAIN : "is commanded by"
 
-**Result**: Clean 3NF Schema.
+    SHIPMENT {
+        string Shipment_ID PK
+        date Shipment_Date
+        date Expected_Arrival_Date
+        string Origin
+        string Destination
+        int Ship_Number
+        string Capt_ID FK
+    }
+    CAPTAIN {
+        string Capt_ID PK
+        string Capt_Name
+    }
+    ITEM {
+        string Item_Number PK
+        string Type
+        string Description
+        float Weight
+    }
+    SHIPMENT_LINE {
+        string Shipment_ID PK, FK
+        string Item_Number PK, FK
+        int Quantity
+    }
+```
 
-### Visual Decomposition
+---
 
+## ACTIVITY IV: PARKING TICKET (Page 80-87)
+**Scenario:** Millennium College keeps a list of parking tickets.
+
+**Sample Data (Table 4-6):**
+| St ID | L Name | F Name | Phone No | St Lic | Lic No | Ticket # | Date | Code | Fine |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 38249 | Brown | Thomas | 111-7804 | FL | BRY 123 | 15634 | 10/17/2015 | 2 | $25 |
+| 38249 | Brown | Thomas | 111-7804 | FL | BRY 123 | 16017 | 11/13/2015 | 1 | $15 |
+| 82453 | Green | Sally | 391-1689 | AL | TRE 141 | 14987 | 10/05/2015 | 3 | $100 |
+| 82453 | Green | Sally | 391-1689 | AL | TRE 141 | 16293 | 11/18/2015 | 1 | $15 |
+| 82453 | Green | Sally | 391-1689 | AL | TRE 141 | 17892 | 12/13/2015 | 2 | $25 |
+
+**Activity IV Solutions:**
+
+**Part a: Convert to 1NF, identify determinants**
+*   The table is already in 1NF (no repeating groups).
+*   **Determinants:**
+    *   `St_ID → L_Name, F_Name, Phone_No, St_Lic, Lic_No`
+    *   `Ticket# → Date, Code, Fine, St_ID` (There is a problem here: `Code` determines `Fine`, which is a transitive dependency).
+    *   `Code → Fine` (Transitive dependency inside the ticket table).
+
+**Part b: Draw a dependency diagram**
 ```mermaid
 flowchart LR
-    subgraph Before[Before: One Big Table]
-        E[Enrollment<br>StudentID, StudentName,<br>CourseID, CourseTitle,<br>Instructor, Grade]
+    subgraph Ticket["TICKET Relation"]
+        direction TB
+        T_PK["Ticket# (PK)"] --> T_Date["Date"]
+        T_PK --> T_Code["Code"]
+        T_PK --> T_Fine["Fine"]
+        T_PK --> T_StID["St_ID (FK)"]
+        T_Code --> T_Fine
     end
-    subgraph After[After: 3NF]
-        S[Student<br>StudentID, StudentName]
-        C[Course<br>CourseID, CourseTitle, Instructor]
-        EN[Enrollment<br>StudentID, CourseID, Grade]
+    subgraph Student["STUDENT Relation"]
+        direction TB
+        S_PK["St_ID (PK)"] --> S_LName["L_Name"]
+        S_PK --> S_FName["F_Name"]
+        S_PK --> S_Phone["Phone_No"]
+        S_PK --> S_StLic["St_Lic"]
+        S_PK --> S_LicNo["Lic_No"]
     end
-    Before -->|Normalize| After
-    S <--> EN
-    C <--> EN
 ```
 
----
+**Part c: Give an example of Anomalies**
+*   **Delete Anomaly:** If we delete Ticket #15634, we do not lose the student's details because the student has multiple other tickets. However, if a student *only* had one ticket and we deleted it, we might lose the student's data. The biggest issue is **Update Anomaly**: If the fine for "Code 2" increases from $25 to $30, we must update *every single ticket row* with Code 2.
 
-## 5. Decomposition & Lossless Join
+**Part d: Develop a set of relations in Third Normal Form (3NF)**
+*(According to the instructions: Include a new column "Violation" to explain reason for each ticket code. Code 1 = Expired meter, Code 2 = No permit, Code 3 = Handicap violation).*
 
-### 1. Big Picture
-When we split tables, we must ensure we can **reconstruct** the original data without losing information. This is called a **Lossless Join**.
+We decompose into 3 tables:
+1.  `STUDENT (ST_ID, L_Name, F_Name, Phone_No, ST_Lic, Lic_No)` → PK: `ST_ID`
+2.  `TICKET (Ticket#, Date, Code, ST_ID)` → PK: `Ticket#`, FK: `ST_ID`, FK: `Code`
+3.  `TICKET_CODE (Code, Violation, Fine)` → PK: `Code`
 
-### 2. Simple Explanation
-If you split a table and then `JOIN` it back together, you must get exactly the original rows—nothing added, nothing missing. The rule for lossless join is that the **common attribute** (the FK) must be a **candidate key** in at least one of the resulting tables.
+*(Note: This removes the transitive dependency where `Ticket# → Code → Fine`).*
 
-### 3. Example
-- `R(A, B, C)`. Decompose into `R1(A, B)` and `R2(B, C)`.
-- If `B` is a candidate key in `R1` or `R2`, it's lossless.
-- In our university example, `StudentID` is PK in `Student`, so joining `Enrollment` and `Student` on `StudentID` reconstructs correctly.
-
-### 4. Software Engineer Perspective
-In ORMs, we constantly do this implicitly. When we define `@OneToMany` relationships, we rely on the underlying foreign keys to ensure the join is lossless. We must be careful—**bad decomposition** leads to **spurious tuples** (extra rows) when joining, which is a silent data corruption bug.
-
-### 5. Exam Perspective
-- **Define** lossless join.
-- **Explain** why it's important.
-- **Determine** if a given decomposition is lossless (using the common attribute rule).
-- **Define** dependency preservation (another property—ensuring all FDs can be enforced without joins).
-
----
-
-## 6. Denormalization (The Rebel)
-
-### 1. Big Picture
-Normalization is great for **writes** (OLTP). But for **reads** (OLAP/reporting), joining many tables is slow. **Denormalization** is the intentional act of adding redundancy back to improve read performance.
-
-### 2. Simple Explanation
-Sometimes, you sacrifice storage and write-speed to make queries faster. You might store `CustomerName` in the `Orders` table again to avoid a join on every order lookup. **You do this ONLY when necessary**, usually in data warehouses or high-traffic read APIs.
-
-### 3. Software Engineer Perspective
-- We design **normalized** for transactional systems (ensuring data integrity).
-- We design **denormalized** for analytics (caching, materialized views, reporting databases).
-- In modern NoSQL databases (like MongoDB), denormalization is the default—we embed data because joins are expensive.
-
-### 4. Exam Perspective
-- **Define** denormalization.
-- **Why** would you do it? (Performance).
-- **Trade-offs**: Faster reads, but slower writes and more storage.
-- Usually asked as a short question contrasting with normalization.
-
----
-
-## Mindset Summary – Connecting to Part 6
-
+**Part e: Develop an E-R Diagram with appropriate cardinality**
 ```mermaid
-flowchart LR
-    subgraph Done[Part 5 Complete]
-        Norm[Normalization]
-        FD[Functional Dependencies]
-        NF[1NF, 2NF, 3NF, BCNF]
-        Denorm[Denormalization]
-    end
-    subgraph Next[Part 6 - SQL]
-        DDL[CREATE, ALTER, DROP]
-        DML[INSERT, UPDATE, DELETE]
-        DQL[SELECT - Joins, Subqueries, Aggregates]
-        TCL[Transactions - ACID]
-    end
-    Done --> Next
+erDiagram
+    STUDENT ||--o{ TICKET : "Receives"
+    TICKET }o--|| TICKET_CODE : "Consists of"
+
+    STUDENT {
+        string ST_ID PK
+        string L_Name
+        string F_Name
+        string Phone_No
+        string ST_Lic
+        string Lic_No
+    }
+    TICKET {
+        string Ticket_No PK
+        date Date
+        int Code FK
+        string ST_ID FK
+    }
+    TICKET_CODE {
+        int Code PK
+        string Violation
+        float Fine
+    }
 ```
 
-- **Normalization** is the "clean code" of databases. It ensures integrity and prevents subtle bugs from update/insert/delete anomalies.
-- As a software engineer, you will design schemas in **3NF** by default.
-- You will **denormalize** only when you have performance metrics proving the need (e.g., 1000+ QPS read load).
-- You must identify **Functional Dependencies** during the design phase—they are the key to understanding relationships.
-
-Now you have a perfectly structured relational schema. In **Part 6**, we will finally write **SQL** to create these tables, query them, and manipulate data. This is where all the theory pays off—writing fast, correct SQL on a well-designed schema is a superpower.
-
 ---
+
+## Summary
+*   **Normalization** is the process of organizing data to minimize redundancy and dependency.
+*   **1NF** ensures every cell contains a single value.
+*   **2NF** ensures every non-key attribute depends on the *entire* primary key.
+*   **3NF** ensures every non-key attribute depends *only* on the primary key (removing transitive dependencies).
+*   By converting a large 1NF table into several smaller 3NF tables (as demonstrated in all 4 activities), you ensure data integrity and make the database much easier to maintain and update without accidental data loss or corruption.
