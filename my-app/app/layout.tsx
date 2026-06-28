@@ -1,3 +1,4 @@
+import "katex/dist/katex.css";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import "./global.css";
 import { Geist } from "next/font/google";
