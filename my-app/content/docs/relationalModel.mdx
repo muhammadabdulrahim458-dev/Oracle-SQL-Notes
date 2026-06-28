@@ -148,23 +148,53 @@ We now look at the relationships between two distinct entities.
 - `COURSE (CourseID, Title)`
 - `ENROLLMENT (StudentID, CourseID, EnrollmentDate, Grade)` → PK: `StudentID + CourseID`.
 
+---
+
 ### C. Binary One-to-One (1:1) Relationships
-*Example:* `PERSON` is married to `PERSON` (or a `DEPARTMENT` is managed by one `EMPLOYEE`). 
+**Example:** A `DEPARTMENT` is managed by one `EMPLOYEE`, and an `EMPLOYEE` manages at most one `DEPARTMENT`.
 
-**The Rule:**
-- Create a table for each entity.
-- The slide teaches that in a 1:1 relationship, one direction is usually **Mandatory**, and the other is **Optional**.
-- **Where to put the Foreign Key?** Place the Foreign Key in the entity with the **Optional** participation.
-- Any attributes that belong to the relationship itself are included in the same table as the foreign key.
+**The Rules (From Slide 21):**
+1. Create a table for each participating entity type.
+2. In a 1:1 relationship, one side is usually **Mandatory** and the other is **Optional**.
+3. **Where does the Foreign Key go?** You place the Foreign Key into the table on the **Optional** side. This FK must point to the Primary Key of the entity on the **Mandatory** side.
+4. Any attributes belonging to the relationship itself are included in this same table (on the optional side).
 
-**Example:** 
-Let's say the business rule says: *"An employee can manage at most one department, but every department MUST have a manager."* Here, `EMPLOYEE` is optional (not every employee is a manager), and `DEPARTMENT` is mandatory (every department must have a manager).
-We put the Foreign Key (`EmployeeID`) on the `DEPARTMENT` table.
+**Applying the Rule to an Example:**
+> *"An employee can manage at most one department, but every department MUST have a manager."*
+
+- **`EMPLOYEE`** = Optional participation in the relationship. (Not every employee is a manager, so for some employees, the FK will be `NULL`).
+- **`DEPARTMENT`** = Mandatory participation. (Every department must have a manager assigned to it).
+
+Because `EMPLOYEE` is Optional, we put the Foreign Key there. This Foreign Key must point to the `DEPARTMENT`'s Primary Key.
 
 **Resulting Tables:**
-- `EMPLOYEE (EmployeeID, Name, DeptID)` → PK: `EmployeeID` (Note: `DeptID` is optional here).
-- `DEPARTMENT (DeptID, Name, ManagerID)` → PK: `DeptID`, **FK: `ManagerID`**.
+- `EMPLOYEE (EmployeeID, Name, DepartmentID)` → **PK:** `EmployeeID`, **FK:** `DepartmentID` *(Note: `DepartmentID` is optional and allows `NULL` values. We also apply a `UNIQUE` constraint to it to enforce the 1:1 rule, ensuring an employee manages at most one department).*
+- `DEPARTMENT (DepartmentID, Name)` → **PK:** `DepartmentID` *(Note: Notice that `ManagerID` does **not** go here. The relationship is handled entirely inside the EMPLOYEE table).*
 
+**Visual Representation of the Correct Schema:**
+
+```mermaid
+flowchart LR
+    subgraph E["EMPLOYEE (Optional Side)"]
+        direction TB
+        E1["EmployeeID (PK)"]
+        E2["Name"]
+        E3["DepartmentID (FK, UNIQUE, NULL-able)"]
+    end
+
+    subgraph D["DEPARTMENT (Mandatory Side)"]
+        direction TB
+        D1["DepartmentID (PK)"]
+        D2["Name"]
+    end
+
+    E3 --> D1
+```
+
+**Why is this correct?**
+* If an employee is **not** a manager, their `DepartmentID` is `NULL`. This is allowed because their participation is optional.
+* If an employee **is** a manager, their `DepartmentID` holds the ID of the department they manage. Because of the `UNIQUE` constraint, no other employee in the `EMPLOYEE` table can hold that same `DepartmentID`, maintaining the 1-to-1 rule perfectly.
+* `DEPARTMENT` never needs to worry about storing the manager's ID; it simply relies on the reverse pointer from the `EMPLOYEE` table. This fits the lecture's strict rule perfectly.
 ---
 
 ## 6. Mapping Associative Entities
