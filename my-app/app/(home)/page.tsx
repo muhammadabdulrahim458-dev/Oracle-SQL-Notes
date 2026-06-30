@@ -323,7 +323,7 @@ export default function HomePage() {
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
             >
               <Link
-                href="/docs"
+                href="/docs/Labs/lab3"
                 className="inline-flex items-center gap-2 rounded-md border px-6 py-2.5 text-sm font-medium border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300 dark:hover:bg-zinc-900 transition-colors shadow-sm"
               >
                 <Terminal className="h-3.5 w-3.5" />
@@ -671,7 +671,7 @@ export default function HomePage() {
               Documentation
             </Link>
             <Link
-              href="https://github.com"
+              href="https://github.com/muhammadabdulrahim458-dev/Oracle-SQL-Notes"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"
@@ -679,7 +679,7 @@ export default function HomePage() {
               <GithubIcon className="w-3 h-3" /> GitHub
             </Link>
             <Link
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/muhammad-abdul-rahim-attari/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors"

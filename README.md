@@ -1,8 +1,4 @@
 # DBMS Notes
-------------------------------------------------------------
-                    DBMS Notes
-
-Modern • Interactive • Visual • Exam Focused
 
 Built with Next.js + FumaDocs
 ------------------------------------------------------------
@@ -18,7 +14,7 @@ Designed for students, educators, and self-learners who want visually organized,
 * 📖 Comprehensive DBMS lecture notes
 * 🎯 Exam-oriented explanations
 * 📊 Beautiful Mermaid diagrams
-* 🔍 Instant full-text search
+* 🔍 Instant full-text search `(Ctrl + K)`
 * 📱 Fully responsive design
 * 🌙 Dark & Light mode
 * 📝 MDX-powered documentation
@@ -31,11 +27,9 @@ Designed for students, educators, and self-learners who want visually organized,
 
 ## 📸 Preview
 
-> Add screenshots or GIFs here.
-
 ### Home Page
 
-![Home](./my-app/public/screenshots/docs.png)
+![Home](./my-app/public/sc1.png)
 
 ### Documentation
 
@@ -182,19 +176,19 @@ docs/
 Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/dbms-notes.git
+git clone https://github.com/muhammadabdulrahim458-dev/Oracle-SQL-Notes.git
 ```
 
 Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 Run the development server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Open
@@ -216,6 +210,10 @@ This project was created to:
 * Document my learning journey in Software Engineering.
 
 ---
+
+## Documentation Snap Shot:
+
+![Home](./my-app/public/sc5.png)
 
 ## 🤝 Contributing
 
